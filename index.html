@@ -1,0 +1,3135 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Private on-device photo gallery with albums, favorites and slideshow.">
+<title>Photo Gallery Albums Pictures Slideshow Favorites</title>
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg:#f2efe9;
+  --surface:#ffffff;
+  --surface-2:#eae4da;
+  --text:#1a1714;
+  --muted:#7d746a;
+  --border:#e4ddd3;
+  --accent:#c9432a;
+  --accent-hover:#a93419;
+  --accent-soft:#fbe9e3;
+  --danger:#b3382a;
+  --danger-soft:#f9e3df;
+  --warn:#96631a;
+  --warn-soft:#fbf1da;
+  --shadow:0 1px 2px rgba(26,23,20,.04),0 8px 24px rgba(26,23,20,.06);
+  --shadow-lg:0 22px 60px rgba(26,23,20,.18);
+  --radius:18px;
+  --radius-sm:12px;
+  --thumb:140px;
+  --nav-h:64px;
+  --safe-b:env(safe-area-inset-bottom, 0px);
+  --safe-t:env(safe-area-inset-top, 0px);
+  --safe-l:env(safe-area-inset-left, 0px);
+  --safe-r:env(safe-area-inset-right, 0px);
+  --font-sans:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Helvetica Neue",Arial,sans-serif;
+  --font-display:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+}
+html[data-theme="dark"]{
+  --bg:#131110;
+  --surface:#1c1917;
+  --surface-2:#272220;
+  --text:#f3ece5;
+  --muted:#a49a90;
+  --border:#332d29;
+  --accent:#f8735a;
+  --accent-hover:#ff8d76;
+  --accent-soft:#3a221b;
+  --danger:#f0776a;
+  --danger-soft:#3a1d1a;
+  --warn:#e0a83c;
+  --warn-soft:#3a2c10;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px rgba(0,0,0,.45);
+  --shadow-lg:0 24px 70px rgba(0,0,0,.65);
+}
+
+/* ============ BASE ============ */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+html{background:var(--bg)}
+body{
+  font-family:var(--font-sans);
+  background:var(--bg);
+  color:var(--text);
+  font-size:15px;
+  line-height:1.45;
+  overflow-x:hidden;
+  min-height:100vh;
+  min-height:100dvh;
+  -webkit-text-size-adjust:100%;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+body.no-scroll{overflow:hidden}
+h1,h2,h3,p{margin:0}
+button{font:inherit;color:inherit;background:none;border:none;padding:0;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+img{display:block;max-width:100%}
+[hidden]{display:none !important}
+.ic{width:20px;height:20px;flex:none;display:block}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:999px}
+
+/* ============ BUTTONS ============ */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:42px;padding:0 18px;border-radius:999px;
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text);font-weight:650;font-size:13.5px;white-space:nowrap;
+  transition:background .18s ease,transform .08s ease,border-color .18s ease,box-shadow .18s ease,color .18s ease;
+}
+.btn:hover{background:var(--surface-2);border-color:var(--border)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.btn.primary{
+  background:var(--accent);border-color:var(--accent);color:#fff;
+  box-shadow:0 6px 18px rgba(201,67,42,.26);
+}
+.btn.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+.btn.danger{color:var(--danger);border-color:var(--border)}
+.btn.danger:hover{background:var(--danger-soft);border-color:var(--danger-soft)}
+.btn.danger-solid{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn.icon-only{width:42px;height:42px;min-height:42px;padding:0}
+.btn.sm{min-height:34px;padding:0 14px;font-size:12.5px;gap:6px}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.ghost:hover{background:var(--surface-2)}
+html[data-theme="dark"] .btn.primary,
+html[data-theme="dark"] .btn.danger-solid{color:#1c0f0b}
+
+/* ============ LAYOUT ============ */
+.app{display:flex;min-height:100dvh}
+.main{flex:1;min-width:0;width:100%}
+.sidebar{display:none}
+
+@media (min-width:900px){
+  .sidebar{
+    display:flex;align-items:center;gap:18px;
+    position:fixed;top:0;left:0;right:0;z-index:80;
+    height:74px;
+    padding-top:var(--safe-t);
+    padding-left:calc(clamp(16px,3vw,40px) + var(--safe-l));
+    padding-right:calc(clamp(16px,3vw,40px) + var(--safe-r));
+    background:var(--surface);
+    border-bottom:1px solid var(--border);
+  }
+  .main{padding-top:74px}
+  .bottomnav{display:none !important}
+}
+
+.brand{display:flex;align-items:center;gap:12px;padding:0}
+.brand-badge{
+  width:40px;height:40px;border-radius:13px;flex:none;
+  background:linear-gradient(140deg,var(--accent),var(--accent-hover));
+  color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 16px rgba(201,67,42,.32);
+}
+.brand-badge .ic{width:22px;height:22px}
+.brand-name{
+  font-family:var(--font-display);
+  font-weight:700;font-size:19px;letter-spacing:-.01em;line-height:1.15;
+}
+.brand-sub{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+
+.side-nav{display:flex;flex-direction:row;gap:4px;margin-left:auto}
+.navitem{
+  display:flex;align-items:center;gap:8px;
+  padding:0 16px;height:42px;border-radius:999px;
+  font-weight:650;font-size:13.5px;color:var(--muted);
+  text-align:left;white-space:nowrap;
+  transition:background .18s,color .18s;
+}
+.navitem:hover{background:var(--surface-2);color:var(--text)}
+.navitem.active{background:var(--accent-soft);color:var(--accent)}
+.navitem .ic{width:19px;height:19px}
+.side-foot{display:none}
+
+/* Bottom nav (phones) — floating dock */
+.bottomnav{
+  position:fixed;left:12px;right:12px;bottom:calc(10px + var(--safe-b));z-index:60;
+  display:flex;gap:2px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:6px;
+  box-shadow:0 12px 34px rgba(26,23,20,.16);
+}
+html[data-theme="dark"] .bottomnav{box-shadow:0 12px 34px rgba(0,0,0,.6)}
+.bottomnav button{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  min-height:52px;border-radius:16px;
+  font-size:10.5px;font-weight:700;letter-spacing:.01em;color:var(--muted);
+  transition:color .18s,background .18s;
+}
+.bottomnav button .ic{width:21px;height:21px}
+.bottomnav button.active{color:var(--accent);background:var(--accent-soft)}
+
+/* ============ VIEWS ============ */
+.views{padding-bottom:calc(96px + var(--safe-b))}
+.view{display:none;padding:18px 14px 26px;max-width:1500px;margin:0 auto}
+.view.active{display:block}
+@media (min-width:900px){
+  .views{padding-bottom:0}
+  .view{padding:34px clamp(20px,3vw,44px) 64px}
+}
+.view-head{
+  display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;
+  margin-bottom:20px;
+}
+.view-head > div:not(.head-actions){flex:1;min-width:0}
+.view-head h1{
+  font-family:var(--font-display);
+  font-size:27px;font-weight:700;letter-spacing:-.015em;line-height:1.15;
+}
+@media (min-width:900px){.view-head h1{font-size:34px}}
+.sub{font-size:13px;color:var(--muted);margin-top:5px;font-weight:500}
+.head-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* ============ TOOLBAR ============ */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.searchfield{
+  flex:1;min-width:190px;display:flex;align-items:center;gap:9px;
+  background:var(--surface);border:1px solid var(--border);border-radius:999px;
+  padding:0 16px;height:42px;color:var(--muted);
+  transition:border-color .18s,box-shadow .18s;
+}
+.searchfield:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.searchfield .ic{width:18px;height:18px}
+.searchfield input{
+  flex:1;min-width:0;border:none;background:none;outline:none;
+  font-size:14px;color:var(--text);height:100%;
+}
+.searchfield input::placeholder{color:var(--muted)}
+select,.text-input{
+  height:42px;border-radius:999px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);
+  padding:0 16px;font-size:13.5px;font-weight:650;outline:none;
+  max-width:100%;
+  transition:border-color .18s,box-shadow .18s;
+}
+select:hover,.text-input:hover{border-color:var(--muted)}
+select:focus-visible,.text-input:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.text-input{width:100%;font-weight:500}
+.thumbctl{
+  display:flex;align-items:center;gap:10px;height:42px;padding:0 16px;
+  background:var(--surface);border:1px solid var(--border);border-radius:999px;
+  color:var(--muted);font-size:12px;
+}
+input[type="range"]{
+  -webkit-appearance:none;appearance:none;background:transparent;
+  width:96px;height:22px;cursor:pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track{height:4px;border-radius:99px;background:var(--border)}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--accent);margin-top:-6px;border:2px solid var(--surface);
+  box-shadow:0 1px 5px rgba(0,0,0,.25);
+}
+input[type="range"]::-moz-range-track{height:4px;border-radius:99px;background:var(--border)}
+input[type="range"]::-moz-range-thumb{width:14px;height:14px;border:2px solid var(--surface);border-radius:50%;background:var(--accent)}
+
+/* ============ GRID ============ */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(var(--thumb),1fr));
+  gap:10px;
+}
+@media (min-width:900px){.grid{gap:14px}}
+.thumb{
+  position:relative;display:block;width:100%;
+  aspect-ratio:1/1;border-radius:14px;overflow:hidden;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  transition:transform .16s ease,box-shadow .18s ease,border-color .18s ease;
+}
+.thumb:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.thumb:active{transform:scale(.975)}
+.thumb img{
+  width:100%;height:100%;object-fit:cover;
+  opacity:0;transition:opacity .28s ease;
+}
+.thumb img.loaded{opacity:1}
+.thumb.selected{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.thumb .fav-badge{
+  position:absolute;top:7px;right:7px;width:25px;height:25px;border-radius:50%;
+  background:rgba(255,255,255,.94);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.22);
+}
+.thumb .fav-badge .ic{width:14px;height:14px}
+.thumb .check{
+  position:absolute;left:7px;top:7px;width:25px;height:25px;border-radius:50%;
+  background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+html[data-theme="dark"] .thumb .check{color:#1c0f0b}
+.thumb .check .ic{width:14px;height:14px}
+.thumb.selected .check{display:flex}
+.thumb:not(.selected) .check{display:none}
+
+/* ============ ALBUMS ============ */
+.album-grid{
+  display:grid;gap:14px;
+  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+}
+@media (min-width:900px){.album-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px}}
+.album-card{
+  display:flex;flex-direction:column;gap:0;text-align:left;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);
+  transition:transform .16s ease,box-shadow .18s ease;
+  padding:0;
+}
+.album-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-3px)}
+.album-card:active{transform:scale(.98)}
+.album-cover{
+  position:relative;width:100%;aspect-ratio:4/3;background:var(--surface-2);
+  display:flex;align-items:center;justify-content:center;color:var(--muted);
+  overflow:hidden;
+}
+.album-cover img{width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .28s}
+.album-cover img.loaded{opacity:1}
+.album-cover .placeholder{opacity:.42}
+.album-cover .placeholder .ic{width:36px;height:36px}
+.album-meta{padding:12px 15px 15px}
+.album-name{
+  font-weight:700;font-size:14.5px;letter-spacing:-.01em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.album-count{font-size:12px;color:var(--muted);margin-top:3px;font-weight:600}
+
+/* ============ EMPTY STATES ============ */
+.empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:8px;padding:56px 24px;
+  background:var(--surface);border:1px solid var(--border);border-radius:26px;
+  box-shadow:var(--shadow);
+}
+.empty.small{padding:30px 18px;border-radius:20px}
+.empty-icon{
+  width:66px;height:66px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;margin-bottom:8px;
+}
+.empty-icon .ic{width:30px;height:30px}
+.empty h2{font-family:var(--font-display);font-size:19px;font-weight:700;letter-spacing:-.01em}
+.empty p{font-size:13.5px;color:var(--muted);max-width:360px;line-height:1.6}
+.empty .empty-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+
+/* ============ SETTINGS ============ */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow);
+}
+.card h2{
+  font-size:11px;font-weight:800;margin-bottom:14px;
+  letter-spacing:.11em;text-transform:uppercase;color:var(--muted);
+}
+.setting-row{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:12px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;
+}
+.setting-row:last-child{border-bottom:none;padding-bottom:0}
+.setting-row:first-of-type{padding-top:0}
+.setting-label{font-size:14px;font-weight:650}
+.setting-help{font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.45}
+.segmented{display:inline-flex;background:var(--surface-2);border-radius:999px;padding:4px;gap:2px}
+.segmented button{
+  display:flex;align-items:center;gap:6px;padding:8px 15px;border-radius:999px;
+  font-size:12.5px;font-weight:700;color:var(--muted);min-height:34px;
+  transition:background .18s,color .18s;
+}
+.segmented button.active{background:var(--accent-soft);color:var(--accent)}
+.segmented button .ic{width:16px;height:16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat{
+  background:var(--surface-2);border-radius:16px;padding:14px 8px;text-align:center;
+}
+.stat b{
+  display:block;font-family:var(--font-display);
+  font-size:25px;font-weight:700;letter-spacing:-.02em;line-height:1.1;
+}
+.stat span{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.privacy-note{font-size:13px;color:var(--muted);line-height:1.65}
+.privacy-note + .privacy-note{margin-top:9px}
+
+@media (min-width:1100px){
+  #view-settings.active{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:18px;
+    align-items:start;
+  }
+  #view-settings > .view-head,
+  #view-settings > .banner{grid-column:1 / -1}
+  #view-settings > .card{margin-bottom:0}
+  #view-settings > .card:last-child{grid-column:1 / -1}
+}
+
+/* ============ SELECTION BAR ============ */
+.selbar{
+  position:fixed;left:12px;right:12px;bottom:calc(10px + var(--safe-b));z-index:120;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:10px 14px;
+  background:var(--surface);border:1px solid var(--border);border-radius:22px;
+  box-shadow:var(--shadow-lg);
+}
+@media (min-width:900px){.selbar{left:auto;right:24px;bottom:24px;min-width:420px}}
+.selbar #selCount{font-weight:700;font-size:13.5px;flex:1;min-width:90px;color:var(--muted)}
+.selbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ============ IMPORT PROGRESS ============ */
+.progress-panel{
+  position:fixed;left:50%;bottom:calc(96px + var(--safe-b));transform:translateX(-50%);
+  width:min(360px,calc(100% - 28px));z-index:300;
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  box-shadow:var(--shadow-lg);padding:15px 18px;
+}
+@media (min-width:900px){.progress-panel{bottom:28px}}
+.pp-title{font-size:13.5px;font-weight:750;margin-bottom:9px;display:flex;justify-content:space-between;gap:10px}
+.pp-title span:last-child{color:var(--muted);font-weight:650}
+.pp-bar{height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.pp-bar div{height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .18s ease}
+.pp-name{
+  font-size:11.5px;color:var(--muted);margin-top:8px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+/* ============ TOAST ============ */
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%) translateY(-14px);
+  bottom:calc(100px + var(--safe-b));z-index:500;
+  background:#1a1714;color:#f7f2ec;font-size:13.5px;font-weight:600;
+  padding:12px 20px;border-radius:999px;box-shadow:0 14px 40px rgba(0,0,0,.36);
+  opacity:0;pointer-events:none;transition:opacity .24s ease,transform .24s ease;
+  max-width:calc(100% - 32px);text-align:center;
+}
+@media (min-width:900px){.toast{bottom:28px}}
+html[data-theme="dark"] .toast{background:#f3ece5;color:#131110}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.error{background:var(--danger);color:#fff}
+.toast.warn{background:var(--warn);color:#fff}
+
+/* ============ STORAGE BANNER ============ */
+.banner{
+  display:flex;gap:10px;align-items:flex-start;
+  background:var(--warn-soft);color:var(--warn);
+  border:none;border-radius:16px;
+  padding:12px 16px;font-size:12.5px;font-weight:600;line-height:1.55;
+  margin-bottom:16px;
+}
+.banner button{margin-left:auto;flex:none;opacity:.8}
+.banner .ic{width:17px;height:17px;margin-top:1px}
+
+/* ============ MODALS ============ */
+.modal-backdrop{
+  position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;
+  padding:18px;background:rgba(20,17,15,.58);backdrop-filter:blur(4px);
+  animation:fadeIn .16s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:24px;padding:24px;width:min(460px,100%);
+  max-height:min(78vh,640px);overflow:auto;box-shadow:var(--shadow-lg);
+}
+.modal-title{
+  font-family:var(--font-display);
+  font-size:20px;font-weight:700;margin-bottom:10px;letter-spacing:-.01em;
+}
+.modal-msg{font-size:13.5px;color:var(--muted);line-height:1.65;margin-bottom:16px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:20px}
+.modal-inline{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.modal-inline .text-input{flex:1;min-width:140px}
+.album-pick-list{display:flex;flex-direction:column;gap:6px;max-height:44vh;overflow:auto;margin-bottom:4px}
+.album-pick{
+  display:flex;align-items:center;gap:10px;padding:13px 14px;
+  border-radius:14px;border:1px solid var(--border);background:var(--surface);
+  font-weight:650;font-size:14px;text-align:left;width:100%;min-height:48px;
+  transition:background .16s,border-color .16s;
+}
+.album-pick:hover{background:var(--surface-2);border-color:var(--muted)}
+.album-pick-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.album-pick-count{font-size:12px;color:var(--muted);font-weight:650}
+
+/* ============ VIEWER ============ */
+.viewer{
+  position:fixed;inset:0;z-index:200;background:#0a0908;
+  display:flex;flex-direction:column;
+  overscroll-behavior:contain;
+}
+.viewer-top{
+  position:absolute;top:calc(8px + var(--safe-t));left:8px;right:8px;z-index:3;
+  display:flex;align-items:center;gap:8px;
+  padding:6px;
+  border-radius:999px;
+  background:rgba(26,23,20,.62);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.11);
+  transition:opacity .22s ease;
+}
+.viewer-title{
+  flex:1;min-width:0;color:#fff;font-size:13.5px;font-weight:650;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.94;
+  padding:0 6px;
+}
+.vbtn{
+  width:42px;height:42px;border-radius:50%;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;background:rgba(255,255,255,.13);
+  transition:background .16s ease,transform .08s ease;
+}
+.vbtn:hover{background:rgba(255,255,255,.26)}
+.vbtn:active{transform:scale(.94)}
+.vbtn .ic{width:21px;height:21px}
+.vbtn.on{color:#ff8b6f;background:rgba(248,115,90,.2)}
+.viewer-stage{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;touch-action:none;
+}
+.viewer-stage img{
+  max-width:100%;max-height:100%;
+  width:auto;height:auto;object-fit:contain;
+  user-select:none;-webkit-user-drag:none;will-change:transform;
+  transform-origin:center center;
+}
+.viewer-stage img.anim{transition:transform .22s cubic-bezier(.22,1,.36,1)}
+.viewer-bottom{
+  position:absolute;left:8px;right:8px;bottom:calc(8px + var(--safe-b));z-index:3;
+  display:flex;align-items:center;gap:8px;
+  padding:6px 6px 6px 18px;
+  border-radius:999px;
+  background:rgba(26,23,20,.62);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.11);
+  transition:opacity .22s ease;
+}
+.viewer-counter{color:#fff;font-size:12.5px;font-weight:700;opacity:.85;flex:1;min-width:0;letter-spacing:.02em}
+.viewer-actions{display:flex;gap:4px}
+.nav-arrow{
+  position:absolute;top:50%;transform:translateY(-50%);z-index:3;
+  width:46px;height:46px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(26,23,20,.55);color:#fff;
+  border:1px solid rgba(255,255,255,.12);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  transition:background .16s,opacity .22s;
+}
+.nav-arrow:hover{background:rgba(26,23,20,.82)}
+.nav-arrow.prev{left:calc(10px + var(--safe-l))}
+.nav-arrow.next{right:calc(10px + var(--safe-r))}
+.nav-arrow .ic{width:24px;height:24px}
+.viewer.focus-mode .viewer-top,
+.viewer.focus-mode .viewer-bottom,
+.viewer.focus-mode .nav-arrow{opacity:0;pointer-events:none}
+.viewer-info{
+  position:absolute;z-index:4;left:12px;right:12px;bottom:calc(78px + var(--safe-b));
+  background:rgba(26,23,20,.94);color:#f0eae4;
+  border-radius:20px;padding:16px 18px;font-size:13px;line-height:1.65;
+  box-shadow:0 18px 50px rgba(0,0,0,.55);
+  border:1px solid rgba(255,255,255,.1);
+  max-height:50vh;overflow:auto;
+}
+.viewer-info dl{display:grid;grid-template-columns:auto 1fr;gap:7px 16px;margin:0}
+.viewer-info dt{color:#a49a90;font-weight:650;white-space:nowrap}
+.viewer-info dd{margin:0;word-break:break-word;text-align:right}
+.viewer-msg{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  color:#d6cec6;font-size:14px;text-align:center;padding:20px;
+}
+
+/* ============ SLIDESHOW ============ */
+.slideshow{position:fixed;inset:0;z-index:250;background:#0a0908;overflow:hidden}
+.ss-stage{position:absolute;inset:0}
+.ss-layer{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:contain;opacity:0;
+  transition:opacity .7s ease;
+  user-select:none;-webkit-user-drag:none;
+}
+.ss-layer.active{opacity:1}
+.ss-top{
+  position:absolute;top:calc(8px + var(--safe-t));left:8px;right:8px;z-index:3;
+  display:flex;align-items:center;gap:10px;
+  padding:6px 6px 6px 20px;
+  border-radius:999px;
+  background:rgba(26,23,20,.62);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.11);
+}
+.ss-title{
+  flex:1;min-width:0;color:#fff;font-size:13px;font-weight:650;opacity:.92;
+  letter-spacing:.02em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ss-controls{
+  position:absolute;left:50%;transform:translateX(-50%);
+  bottom:calc(14px + var(--safe-b));z-index:3;
+  display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;
+  padding:6px;
+  border-radius:999px;
+  background:rgba(26,23,20,.62);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,.11);
+  max-width:calc(100% - 20px);
+}
+.ss-controls .vbtn.on{color:#ff8b6f;background:rgba(248,115,90,.22)}
+.ss-interval{
+  height:36px;border-radius:999px;border:1px solid rgba(255,255,255,.22);
+  background:rgba(255,255,255,.12);color:#fff;font-size:12.5px;font-weight:700;
+  padding:0 12px;margin-left:2px;
+}
+.ss-interval option{color:#1a1714}
+
+/* ============ MISC ============ */
+.spin{
+  width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+    scroll-behavior:auto !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ============ SIDEBAR / TOP BAR ============ -->
+  <aside class="sidebar" aria-label="Sidebar navigation">
+    <div class="brand">
+      <span class="brand-badge" aria-hidden="true">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15.5l-4.5-4.5L6.5 21"/></svg>
+      </span>
+      <div>
+        <div class="brand-name">Photo Gallery</div>
+        <div class="brand-sub">Albums · Favorites · Slideshow</div>
+      </div>
+    </div>
+    <nav class="side-nav">
+      <button type="button" class="navitem" data-nav="photos">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15.5l-4.5-4.5L6.5 21"/></svg>
+        <span>Photos</span>
+      </button>
+      <button type="button" class="navitem" data-nav="albums">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10a2 2 0 0 1 2 2v12"/><rect x="3" y="7" width="12" height="13" rx="2.5"/><path d="M3 16.5L6.5 13l4.5 4.5"/></svg>
+        <span>Albums</span>
+      </button>
+      <button type="button" class="navitem" data-nav="favorites">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 6.6a5 5 0 0 0-7.1 0L12 8.3l-1.7-1.7a5 5 0 1 0-7.1 7.1L12 21l8.8-7.3a5 5 0 0 0 0-7.1z"/></svg>
+        <span>Favorites</span>
+      </button>
+      <button type="button" class="navitem" data-nav="settings">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.3a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.7 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.7 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.7a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.1A1.7 1.7 0 0 0 15 4.7a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.3 9v.03a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1.44z"/></svg>
+        <span>Settings</span>
+      </button>
+    </nav>
+    <div class="side-foot">Your photos never leave this device. Everything is stored locally in your browser.</div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <div class="views">
+
+      <!-- ---------- PHOTOS ---------- -->
+      <section class="view" id="view-photos" data-view="photos" aria-labelledby="photosHeading">
+        <div id="photosBanner" class="banner" hidden>
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <span id="photosBannerText"></span>
+        </div>
+        <div class="view-head">
+          <div>
+            <h1 id="photosHeading">Photos</h1>
+            <p class="sub" id="photosSub">No photos yet</p>
+          </div>
+          <div class="head-actions">
+            <button class="btn icon-only" id="btnSlideshowPhotos" type="button" title="Start slideshow" aria-label="Start slideshow">
+              <svg class="ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l12 7-12 7z"/></svg>
+            </button>
+            <button class="btn" id="btnSelect" type="button">Select</button>
+            <button class="btn primary" id="btnImport" type="button">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              Import Photos
+            </button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <label class="searchfield">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+            <input type="search" id="searchInput" placeholder="Search by filename" aria-label="Search photos by filename" autocomplete="off">
+          </label>
+          <select id="sortSelect" aria-label="Sort photos">
+            <option value="imported-desc">Newest imported</option>
+            <option value="imported-asc">Oldest imported</option>
+            <option value="name-asc">Filename A–Z</option>
+            <option value="name-desc">Filename Z–A</option>
+            <option value="modified-desc">File modified (newest)</option>
+            <option value="modified-asc">File modified (oldest)</option>
+          </select>
+          <div class="thumbctl">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" style="width:16px;height:16px"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>
+            <input type="range" id="thumbRange" min="90" max="240" step="10" aria-label="Thumbnail size">
+          </div>
+          <button class="btn sm ghost" id="btnImportFolder" type="button" hidden>
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h3l2 2.5h7A2.5 2.5 0 0 1 20 10v7a2.5 2.5 0 0 1-2.5 2.5h-12A2.5 2.5 0 0 1 3 17z"/></svg>
+            Import folder
+          </button>
+        </div>
+
+        <div class="grid" id="photosGrid"></div>
+        <div class="empty small" id="photosNoResults" hidden>
+          <h2>No matches</h2>
+          <p>No photos in your library match that filename.</p>
+        </div>
+        <div class="empty" id="photosEmpty" hidden>
+          <div class="empty-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg>
+          </div>
+          <h2>No photos yet</h2>
+          <p>Import photos from this device to build your library. Everything stays private and on-device — nothing is uploaded.</p>
+          <div class="empty-actions">
+            <button class="btn primary" id="photosEmptyImport" type="button">Import Photos</button>
+            <button class="btn" id="photosEmptyFolder" type="button" hidden>Import folder</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- ALBUMS ---------- -->
+      <section class="view" id="view-albums" data-view="albums" aria-labelledby="albumsHeading">
+        <div class="view-head">
+          <div>
+            <h1 id="albumsHeading">Albums</h1>
+            <p class="sub" id="albumsSub">Albums in this app only — not folders on your device</p>
+          </div>
+          <div class="head-actions">
+            <button class="btn primary" id="btnNewAlbum" type="button">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              New album
+            </button>
+          </div>
+        </div>
+        <div class="album-grid" id="albumsGrid"></div>
+        <div class="empty" id="albumsEmpty" hidden>
+          <div class="empty-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10a2 2 0 0 1 2 2v12"/><rect x="3" y="7" width="12" height="13" rx="2.5"/><path d="M3 16.5L6.5 13l4.5 4.5"/></svg>
+          </div>
+          <h2>No albums yet</h2>
+          <p>Albums group photos inside this app. Creating an album does not create a folder on your device.</p>
+          <div class="empty-actions">
+            <button class="btn primary" id="albumsEmptyNew" type="button">Create album</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- ALBUM DETAIL ---------- -->
+      <section class="view" id="view-album" data-view="album" aria-labelledby="albumTitle">
+        <div class="view-head">
+          <button class="btn icon-only" id="btnAlbumBack" type="button" aria-label="Back to albums" title="Back to albums">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div>
+            <h1 id="albumTitle">Album</h1>
+            <p class="sub" id="albumSub"></p>
+          </div>
+          <div class="head-actions">
+            <button class="btn icon-only" id="btnAlbumSlideshow" type="button" aria-label="Start album slideshow" title="Slideshow">
+              <svg class="ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l12 7-12 7z"/></svg>
+            </button>
+            <button class="btn" id="btnAlbumSelect" type="button">Select</button>
+            <button class="btn" id="btnAlbumRename" type="button">Rename</button>
+            <button class="btn danger" id="btnAlbumDelete" type="button">Delete</button>
+          </div>
+        </div>
+        <div class="grid" id="albumGrid"></div>
+        <div class="empty" id="albumEmpty" hidden>
+          <div class="empty-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg>
+          </div>
+          <h2>This album is empty</h2>
+          <p>Add photos from your library to this album. The photos themselves stay in Photos.</p>
+          <div class="empty-actions">
+            <button class="btn primary" id="btnAlbumAddPhotos" type="button">Add photos</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- FAVORITES ---------- -->
+      <section class="view" id="view-favorites" data-view="favorites" aria-labelledby="favHeading">
+        <div class="view-head">
+          <div>
+            <h1 id="favHeading">Favorites</h1>
+            <p class="sub" id="favSub">No favorites yet</p>
+          </div>
+          <div class="head-actions">
+            <button class="btn icon-only" id="btnSlideshowFav" type="button" aria-label="Start favorites slideshow" title="Slideshow">
+              <svg class="ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l12 7-12 7z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="grid" id="favGrid"></div>
+        <div class="empty" id="favEmpty" hidden>
+          <div class="empty-icon">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 6.6a5 5 0 0 0-7.1 0L12 8.3l-1.7-1.7a5 5 0 1 0-7.1 7.1L12 21l8.8-7.3a5 5 0 0 0 0-7.1z"/></svg>
+          </div>
+          <h2>No favorites yet</h2>
+          <p>Tap the heart on a photo — in the grid or in the fullscreen viewer — to add it to your favorites.</p>
+          <div class="empty-actions">
+            <button class="btn primary" id="favEmptyImport" type="button">Import Photos</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- SETTINGS ---------- -->
+      <section class="view" id="view-settings" data-view="settings" aria-labelledby="settingsHeading">
+        <div class="view-head">
+          <div>
+            <h1 id="settingsHeading">Settings</h1>
+            <p class="sub">Appearance, slideshow and library</p>
+          </div>
+        </div>
+
+        <div id="settingsBanner" class="banner" hidden>
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+          <span id="settingsBannerText"></span>
+        </div>
+
+        <div class="card">
+          <h2>Appearance</h2>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Theme</div>
+              <div class="setting-help">Light theme by default, dark theme available.</div>
+            </div>
+            <div class="segmented" id="themeSeg" role="group" aria-label="Theme">
+              <button type="button" data-theme="light">
+                <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+                Light
+              </button>
+              <button type="button" data-theme="dark">
+                <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                Dark
+              </button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Thumbnail size</div>
+              <div class="setting-help" id="thumbSizeLabel">140 px</div>
+            </div>
+            <input type="range" id="thumbRangeSettings" min="90" max="240" step="10" aria-label="Thumbnail size">
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Slideshow</h2>
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Default interval</div>
+              <div class="setting-help">How long each photo is shown.</div>
+            </div>
+            <select id="intervalSelect" aria-label="Default slideshow interval">
+              <option value="2">2 seconds</option>
+              <option value="3">3 seconds</option>
+              <option value="5">5 seconds</option>
+              <option value="10">10 seconds</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Library</h2>
+          <div class="stats">
+            <div class="stat"><b id="statPhotos">0</b><span>Photos</span></div>
+            <div class="stat"><b id="statAlbums">0</b><span>Albums</span></div>
+            <div class="stat"><b id="statFavs">0</b><span>Favorites</span></div>
+          </div>
+          <button class="btn danger" id="btnClearLibrary" type="button" style="width:100%">Clear imported library</button>
+        </div>
+
+        <div class="card">
+          <h2>Privacy</h2>
+          <p class="privacy-note">This app never uploads your photos. There are no network requests, no analytics and no cloud services. Imported images, thumbnails, albums and favorites are stored only in this browser’s IndexedDB database on this device.</p>
+          <p class="privacy-note">Clearing your browser data, app data or site data will permanently remove your imported library from this app. Removing a photo from the library only deletes this app’s stored copy — it never deletes the original file on your device.</p>
+          <p class="privacy-note">Albums created here are groups inside this app. They do not create folders on your device.</p>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ============ BOTTOM NAV (phones) ============ -->
+  <nav class="bottomnav" aria-label="Main navigation">
+    <button type="button" data-nav="photos">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15.5l-4.5-4.5L6.5 21"/></svg>
+      <span>Photos</span>
+    </button>
+    <button type="button" data-nav="albums">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10a2 2 0 0 1 2 2v12"/><rect x="3" y="7" width="12" height="13" rx="2.5"/><path d="M3 16.5L6.5 13l4.5 4.5"/></svg>
+      <span>Albums</span>
+    </button>
+    <button type="button" data-nav="favorites">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 6.6a5 5 0 0 0-7.1 0L12 8.3l-1.7-1.7a5 5 0 1 0-7.1 7.1L12 21l8.8-7.3a5 5 0 0 0 0-7.1z"/></svg>
+      <span>Favorites</span>
+    </button>
+    <button type="button" data-nav="settings">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.5a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.3a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.7 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.7 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.7a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.1A1.7 1.7 0 0 0 15 4.7a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.3 9v.03a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1.44z"/></svg>
+      <span>Settings</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ============ SELECTION BAR ============ -->
+<div class="selbar" id="selbar" hidden role="toolbar" aria-label="Selection actions">
+  <span id="selCount">0 selected</span>
+  <div class="selbar-actions">
+    <button class="btn sm" id="selAdd" type="button">Add to album</button>
+    <button class="btn sm danger" id="selRemove" type="button">Remove from library</button>
+    <button class="btn sm" id="selCancel" type="button">Cancel</button>
+  </div>
+</div>
+
+<!-- ============ IMPORT PROGRESS ============ -->
+<div class="progress-panel" id="importProgress" hidden role="status" aria-live="polite">
+  <div class="pp-title"><span>Importing photos…</span><span id="ppTotal">0 / 0</span></div>
+  <div class="pp-bar"><div id="ppFill"></div></div>
+  <div class="pp-name" id="ppName"></div>
+</div>
+
+<!-- ============ TOAST ============ -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ============ VIEWER ============ -->
+<div class="viewer" id="viewer" hidden aria-label="Photo viewer" role="dialog" aria-modal="true">
+  <div class="viewer-top">
+    <button class="vbtn" id="viewerClose" type="button" aria-label="Close viewer">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="viewer-title" id="viewerTitle"></div>
+    <button class="vbtn" id="viewerFav" type="button" aria-label="Toggle favorite" aria-pressed="false">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 6.6a5 5 0 0 0-7.1 0L12 8.3l-1.7-1.7a5 5 0 1 0-7.1 7.1L12 21l8.8-7.3a5 5 0 0 0 0-7.1z"/></svg>
+    </button>
+  </div>
+
+  <div class="viewer-stage" id="viewerStage">
+    <img id="viewerImg" alt="" draggable="false">
+  </div>
+  <div class="viewer-msg" id="viewerMsg" hidden></div>
+
+  <button class="nav-arrow prev" id="viewerPrev" type="button" aria-label="Previous photo">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <button class="nav-arrow next" id="viewerNext" type="button" aria-label="Next photo">
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+  </button>
+
+  <div class="viewer-info" id="viewerInfoPanel" hidden></div>
+
+  <div class="viewer-bottom">
+    <div class="viewer-counter" id="viewerCounter"></div>
+    <div class="viewer-actions">
+      <button class="vbtn" id="viewerInfoBtn" type="button" aria-label="Photo information" aria-pressed="false">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
+      </button>
+      <button class="vbtn" id="viewerSlideshow" type="button" aria-label="Start slideshow">
+        <svg class="ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l12 7-12 7z"/></svg>
+      </button>
+      <button class="vbtn" id="viewerFullscreen" type="button" aria-label="Toggle fullscreen">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5.5A2.5 2.5 0 0 0 3 5.5V8M16 3h2.5A2.5 2.5 0 0 1 21 5.5V8M8 21H5.5A2.5 2.5 0 0 1 3 18.5V16M16 21h2.5a2.5 2.5 0 0 0 2.5-2.5V16"/></svg>
+      </button>
+      <button class="vbtn" id="viewerDelete" type="button" aria-label="Remove from library">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6M6.5 6l.9 13.1A2 2 0 0 0 9.4 21h5.2a2 2 0 0 0 2-1.9L17.5 6"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SLIDESHOW ============ -->
+<div class="slideshow" id="slideshow" hidden aria-label="Slideshow" role="dialog" aria-modal="true">
+  <div class="ss-stage">
+    <img class="ss-layer" id="ssLayer0" alt="">
+    <img class="ss-layer" id="ssLayer1" alt="">
+  </div>
+  <div class="ss-top">
+    <div class="ss-title" id="ssTitle">Slideshow</div>
+    <button class="vbtn" id="ssClose" type="button" aria-label="Exit slideshow">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="ss-controls">
+    <button class="vbtn" id="ssPrev" type="button" aria-label="Previous slide">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button class="vbtn" id="ssPlay" type="button" aria-label="Pause slideshow">
+      <svg class="ic" id="ssPlayIcon" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+    </button>
+    <button class="vbtn" id="ssNext" type="button" aria-label="Next slide">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <button class="vbtn" id="ssShuffle" type="button" aria-label="Shuffle" aria-pressed="false">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+    </button>
+    <button class="vbtn" id="ssLoop" type="button" aria-label="Loop" aria-pressed="true">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+    </button>
+    <select class="ss-interval" id="ssInterval" aria-label="Slideshow interval">
+      <option value="2">2s</option>
+      <option value="3">3s</option>
+      <option value="5">5s</option>
+      <option value="10">10s</option>
+    </select>
+  </div>
+</div>
+
+<!-- hidden inputs -->
+<input type="file" id="fileInput" accept="image/*" multiple hidden>
+<input type="file" id="folderInput" accept="image/*" multiple webkitdirectory directory hidden>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =========================================================
+     ICONS
+     ========================================================= */
+  const ICONS = {
+    photos: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15.5l-4.5-4.5L6.5 21"/></svg>',
+    heartFill: '<svg class="ic" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20.8 6.6a5 5 0 0 0-7.1 0L12 8.3l-1.7-1.7a5 5 0 1 0-7.1 7.1L12 21l8.8-7.3a5 5 0 0 0 0-7.1z"/></svg>',
+    heart: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 6.6a5 5 0 0 0-7.1 0L12 8.3l-1.7-1.7a5 5 0 1 0-7.1 7.1L12 21l8.8-7.3a5 5 0 0 0 0-7.1z"/></svg>',
+    check: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+    play: '<svg class="ic" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5l12 7-12 7z"/></svg>',
+    pause: '<svg class="ic" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>',
+    image: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg>',
+    warn: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>'
+  };
+
+  function iconEl(name) {
+    const tpl = document.createElement('template');
+    tpl.innerHTML = (ICONS[name] || '').trim();
+    return tpl.content.firstElementChild || document.createTextNode('');
+  }
+
+  /* =========================================================
+     SMALL HELPERS
+     ========================================================= */
+  const $ = (sel, root) => (root || document).querySelector(sel);
+  const $$ = (sel, root) => Array.prototype.slice.call((root || document).querySelectorAll(sel));
+
+  function el(tag, attrs) {
+    const node = document.createElement(tag);
+    if (attrs) {
+      Object.keys(attrs).forEach(function (k) {
+        const v = attrs[k];
+        if (v === null || v === undefined) return;
+        if (k === 'class') node.className = v;
+        else if (k === 'text') node.textContent = v;
+        else node.setAttribute(k, v);
+      });
+    }
+    for (let i = 2; i < arguments.length; i++) {
+      const kid = arguments[i];
+      if (kid === null || kid === undefined) continue;
+      node.appendChild(kid.nodeType ? kid : document.createTextNode(String(kid)));
+    }
+    return node;
+  }
+
+  function newId() {
+    try {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    } catch (e) { /* ignore */ }
+    return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  }
+
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+  function formatBytes(bytes) {
+    if (bytes === null || bytes === undefined || isNaN(bytes)) return '—';
+    if (bytes < 1024) return bytes + ' B';
+    const units = ['KB', 'MB', 'GB', 'TB'];
+    let n = bytes / 1024, i = 0;
+    while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+    return (n >= 10 ? n.toFixed(0) : n.toFixed(1)) + ' ' + units[i];
+  }
+
+  function formatDate(ts) {
+    if (!ts) return '—';
+    try {
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleString(undefined, {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    } catch (e) { return '—'; }
+  }
+
+  function cssEscape(str) {
+    if (window.CSS && CSS.escape) return CSS.escape(str);
+    return String(str).replace(/["\\]/g, '\\$&');
+  }
+
+  /* =========================================================
+     TOAST
+     ========================================================= */
+  let toastTimer = null;
+  function toast(message, kind) {
+    const t = $('#toast');
+    t.textContent = message;
+    t.className = 'toast show' + (kind ? ' ' + kind : '');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      t.className = 'toast' + (kind ? ' ' + kind : '');
+    }, 3000);
+  }
+
+  /* =========================================================
+     SETTINGS (localStorage — lightweight only)
+     ========================================================= */
+  const SETTINGS_KEY = 'pgf-settings-v1';
+
+  const state = {
+    view: 'photos',
+    albumId: null,
+    photos: [],
+    albums: [],
+    search: '',
+    sort: 'imported-desc',
+    thumbSize: 140,
+    theme: 'light',
+    slideInterval: 3,
+    selectMode: false,
+    selection: new Set(),
+    thumbUrls: new Map()
+  };
+
+  function loadSettings() {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (!s || typeof s !== 'object') return;
+      if (s.theme === 'dark' || s.theme === 'light') state.theme = s.theme;
+      if (typeof s.thumbSize === 'number' && s.thumbSize >= 90 && s.thumbSize <= 240) state.thumbSize = s.thumbSize;
+      if ([2, 3, 5, 10].indexOf(s.slideInterval) !== -1) state.slideInterval = s.slideInterval;
+      if (typeof s.sort === 'string') state.sort = s.sort;
+    } catch (e) { /* ignore */ }
+  }
+
+  function saveSettings() {
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+        theme: state.theme,
+        thumbSize: state.thumbSize,
+        slideInterval: state.slideInterval,
+        sort: state.sort
+      }));
+    } catch (e) { /* ignore quota / privacy mode */ }
+  }
+
+  function applyTheme() {
+    document.documentElement.setAttribute('data-theme', state.theme);
+    const meta = document.querySelector('meta[name="color-scheme"]');
+    if (meta) meta.setAttribute('content', state.theme === 'dark' ? 'dark' : 'light');
+  }
+
+  function setThumbSize(value) {
+    state.thumbSize = clamp(Math.round(value / 10) * 10, 90, 240);
+    document.documentElement.style.setProperty('--thumb', state.thumbSize + 'px');
+    const a = $('#thumbRange'), b = $('#thumbRangeSettings'), lbl = $('#thumbSizeLabel');
+    if (a) a.value = String(state.thumbSize);
+    if (b) b.value = String(state.thumbSize);
+    if (lbl) lbl.textContent = state.thumbSize + ' px';
+    saveSettings();
+  }
+
+  /* =========================================================
+     INDEXEDDB LAYER
+     ========================================================= */
+  const DB_NAME = 'photo-gallery-db';
+  const DB_VERSION = 1;
+  const STORE_NAMES = ['photos', 'blobs', 'albums'];
+
+  let db = null;
+  let storageOK = true;
+  const mem = { photos: new Map(), blobs: new Map(), albums: new Map() };
+
+  function openDB() {
+    return new Promise(function (resolve, reject) {
+      let req;
+      try {
+        req = indexedDB.open(DB_NAME, DB_VERSION);
+      } catch (e) { reject(e); return; }
+      req.onupgradeneeded = function (e) {
+        const d = e.target.result;
+        if (!d.objectStoreNames.contains('photos')) d.createObjectStore('photos', { keyPath: 'id' });
+        if (!d.objectStoreNames.contains('blobs')) d.createObjectStore('blobs', { keyPath: 'id' });
+        if (!d.objectStoreNames.contains('albums')) d.createObjectStore('albums', { keyPath: 'id' });
+      };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error || new Error('IndexedDB open failed')); };
+      req.onblocked = function () { reject(new Error('IndexedDB blocked')); };
+    });
+  }
+
+  function idbRequest(req) {
+    return new Promise(function (resolve, reject) {
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+
+  function rawGetAll(storeName) {
+    if (!db) return Promise.resolve([]);
+    return new Promise(function (resolve, reject) {
+      try {
+        const tx = db.transaction(storeName, 'readonly');
+        const req = tx.objectStore(storeName).getAll();
+        req.onsuccess = function () { resolve(req.result || []); };
+        req.onerror = function () { reject(req.error); };
+      } catch (e) { reject(e); }
+    });
+  }
+
+  function showStorageBanner(message) {
+    const banner = $('#photosBanner');
+    const text = $('#photosBannerText');
+    if (banner && text) { text.textContent = message; banner.hidden = false; }
+    const sb = $('#settingsBanner');
+    const st = $('#settingsBannerText');
+    if (sb && st) { st.textContent = message; sb.hidden = false; }
+  }
+
+  function degradeToMemory(reason) {
+    if (!storageOK) return Promise.resolve();
+    return (async function () {
+      try {
+        for (let i = 0; i < STORE_NAMES.length; i++) {
+          const name = STORE_NAMES[i];
+          const all = await rawGetAll(name);
+          all.forEach(function (rec) { mem[name].set(rec.id, rec); });
+        }
+      } catch (e) { /* best effort */ }
+      storageOK = false;
+      const msg = reason + ' Photos imported now are only available for this session and will not be saved.';
+      showStorageBanner(msg);
+    })();
+  }
+
+  async function storeGet(storeName, key) {
+    if (storageOK && db) {
+      try {
+        const tx = db.transaction(storeName, 'readonly');
+        return await idbRequest(tx.objectStore(storeName).get(key));
+      } catch (e) { /* fall through */ }
+    }
+    return mem[storeName].get(key);
+  }
+
+  async function storeGetAll(storeName) {
+    if (storageOK && db) {
+      try { return await rawGetAll(storeName); } catch (e) { /* fall through */ }
+    }
+    return Array.from(mem[storeName].values());
+  }
+
+  async function storePut(storeName, value) {
+    if (storageOK && db) {
+      try {
+        const tx = db.transaction(storeName, 'readwrite');
+        const req = tx.objectStore(storeName).put(value);
+        await new Promise(function (resolve, reject) {
+          req.onsuccess = function () { resolve(); };
+          req.onerror = function () { reject(req.error); };
+          tx.onerror = function () { reject(tx.error); };
+          tx.onabort = function () { reject(tx.error || new Error('Transaction aborted')); };
+        });
+        return true;
+      } catch (err) {
+        const isQuota = err && (err.name === 'QuotaExceededError' || err.code === 22);
+        await degradeToMemory(isQuota
+          ? 'Not enough storage space is available on this device.'
+          : 'Saving to device storage failed.');
+        mem[storeName].set(value.id, value);
+        return false;
+      }
+    }
+    mem[storeName].set(value.id, value);
+    return false;
+  }
+
+  async function storeDelete(storeName, key) {
+    if (storageOK && db) {
+      try {
+        const tx = db.transaction(storeName, 'readwrite');
+        const req = tx.objectStore(storeName).delete(key);
+        await new Promise(function (resolve, reject) {
+          req.onsuccess = function () { resolve(); };
+          req.onerror = function () { reject(req.error); };
+        });
+      } catch (e) { /* fall through */ }
+    }
+    mem[storeName].delete(key);
+  }
+
+  /* =========================================================
+     THUMBNAIL OBJECT URL CACHE
+     ========================================================= */
+  function clearThumbUrls() {
+    state.thumbUrls.forEach(function (url) {
+      try { URL.revokeObjectURL(url); } catch (e) { /* ignore */ }
+    });
+    state.thumbUrls.clear();
+  }
+
+  async function getThumbUrl(id) {
+    if (state.thumbUrls.has(id)) return state.thumbUrls.get(id);
+    let rec = null;
+    try { rec = await storeGet('blobs', id); } catch (e) { return null; }
+    if (!rec || !rec.thumb) return null;
+    let url;
+    try { url = URL.createObjectURL(rec.thumb); } catch (e) { return null; }
+    state.thumbUrls.set(id, url);
+    return url;
+  }
+
+  let thumbObserver = null;
+  function resetThumbObserver() {
+    if (thumbObserver) { thumbObserver.disconnect(); thumbObserver = null; }
+    if (typeof IntersectionObserver === 'undefined') return;
+    thumbObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          thumbObserver.unobserve(entry.target);
+          loadThumbInto(entry.target);
+        }
+      });
+    }, { rootMargin: '500px 0px' });
+  }
+
+  function observeThumb(img) {
+    if (thumbObserver) thumbObserver.observe(img);
+    else loadThumbInto(img);
+  }
+
+  async function loadThumbInto(img) {
+    const id = img.getAttribute('data-id');
+    if (!id) return;
+    const url = await getThumbUrl(id);
+    if (!url) {
+      img.setAttribute('data-failed', '1');
+      return;
+    }
+    img.addEventListener('load', function () { img.classList.add('loaded'); }, { once: true });
+    img.addEventListener('error', function () { img.setAttribute('data-failed', '1'); }, { once: true });
+    img.src = url;
+    if (img.complete && img.naturalWidth) img.classList.add('loaded');
+  }
+
+  /* =========================================================
+     DATA LOADING
+     ========================================================= */
+  async function loadData() {
+    try {
+      const photos = await storeGetAll('photos');
+      const albums = await storeGetAll('albums');
+      state.photos = photos.filter(Boolean);
+      state.albums = albums.filter(Boolean).map(function (a) {
+        if (!Array.isArray(a.photoIds)) a.photoIds = [];
+        return a;
+      });
+      state.albums.sort(function (a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
+    } catch (e) {
+      await degradeToMemory('Reading stored photos failed.');
+      state.photos = Array.from(mem.photos.values());
+      state.albums = Array.from(mem.albums.values());
+    }
+  }
+
+  function getAlbum(id) {
+    for (let i = 0; i < state.albums.length; i++) if (state.albums[i].id === id) return state.albums[i];
+    return null;
+  }
+
+  function getPhoto(id) {
+    for (let i = 0; i < state.photos.length; i++) if (state.photos[i].id === id) return state.photos[i];
+    return null;
+  }
+
+  /* =========================================================
+     SORTING / FILTERING
+     ========================================================= */
+  function sortList(list) {
+    const parts = state.sort.split('-');
+    const field = parts[0];
+    const dir = parts[1] === 'asc' ? 1 : -1;
+    const copy = list.slice();
+    copy.sort(function (a, b) {
+      let r = 0;
+      if (field === 'name') {
+        r = a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+      } else if (field === 'imported') {
+        r = (a.importedAt || 0) - (b.importedAt || 0);
+      } else if (field === 'modified') {
+        r = (a.lastModified || 0) - (b.lastModified || 0);
+      }
+      if (r === 0) r = (a.importedAt || 0) - (b.importedAt || 0);
+      return r * dir;
+    });
+    return copy;
+  }
+
+  function getViewPhotos() {
+    let list;
+    if (state.view === 'album') {
+      const album = getAlbum(state.albumId);
+      if (!album) return [];
+      const set = new Set(album.photoIds);
+      list = state.photos.filter(function (p) { return set.has(p.id); });
+    } else if (state.view === 'favorites') {
+      list = state.photos.filter(function (p) { return p.favorite; });
+    } else {
+      list = state.photos.slice();
+    }
+    if (state.view === 'photos' && state.search.trim()) {
+      const q = state.search.trim().toLowerCase();
+      list = list.filter(function (p) { return p.name.toLowerCase().indexOf(q) !== -1; });
+    }
+    return sortList(list);
+  }
+
+  /* =========================================================
+     IMPORT
+     ========================================================= */
+  const importUI = {
+    panel: null, total: null, fill: null, name: null
+  };
+
+  function initImportUI() {
+    importUI.panel = $('#importProgress');
+    importUI.total = $('#ppTotal');
+    importUI.fill = $('#ppFill');
+    importUI.name = $('#ppName');
+  }
+
+  function showImportProgress(total) {
+    importUI.panel.hidden = false;
+    importUI.total.textContent = '0 / ' + total;
+    importUI.fill.style.width = '0%';
+    importUI.name.textContent = '';
+  }
+
+  function updateImportProgress(done, total, name) {
+    importUI.total.textContent = done + ' / ' + total;
+    importUI.fill.style.width = (total ? (done / total) * 100 : 0) + '%';
+    importUI.name.textContent = name || '';
+  }
+
+  function hideImportProgress() {
+    importUI.panel.hidden = true;
+  }
+
+  function isImageFile(file) {
+    if (file.type && file.type.indexOf('image/') === 0) return true;
+    return /\.(jpe?g|jfif|png|gif|webp|bmp|avif|ico|svg|heic|heif)$/i.test(file.name || '');
+  }
+
+  function decodeImageFile(file) {
+    return new Promise(function (resolve, reject) {
+      let objectUrl = null;
+      let settled = false;
+
+      function done(result) {
+        if (settled) return;
+        settled = true;
+        resolve(result);
+      }
+      function fail(err) {
+        if (settled) return;
+        settled = true;
+        if (objectUrl) { try { URL.revokeObjectURL(objectUrl); } catch (e) {} }
+        reject(err);
+      }
+
+      if (typeof createImageBitmap === 'function') {
+        createImageBitmap(file).then(function (bmp) {
+          done({
+            width: bmp.width,
+            height: bmp.height,
+            source: bmp,
+            cleanup: function () { try { bmp.close && bmp.close(); } catch (e) {} }
+          });
+        }).catch(function () {
+          fallback();
+        });
+      } else {
+        fallback();
+      }
+
+      function fallback() {
+        try { objectUrl = URL.createObjectURL(file); } catch (e) { fail(e); return; }
+        const img = new Image();
+        img.onload = function () {
+          if (!img.naturalWidth || !img.naturalHeight) { fail(new Error('Empty image')); return; }
+          done({
+            width: img.naturalWidth,
+            height: img.naturalHeight,
+            source: img,
+            cleanup: function () { try { URL.revokeObjectURL(objectUrl); } catch (e) {} }
+          });
+        };
+        img.onerror = function () { fail(new Error('Cannot decode image')); };
+        img.src = objectUrl;
+      }
+    });
+  }
+
+  function makeThumbnail(source, width, height, maxSize) {
+    const max = maxSize || 420;
+    const scale = Math.min(1, max / Math.max(width, height));
+    const tw = Math.max(1, Math.round(width * scale));
+    const th = Math.max(1, Math.round(height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = tw;
+    canvas.height = th;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return Promise.reject(new Error('Canvas unavailable'));
+    ctx.imageSmoothingEnabled = true;
+    if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
+    try {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, tw, th);
+      ctx.drawImage(source, 0, 0, tw, th);
+    } catch (e) {
+      return Promise.reject(e);
+    }
+    return new Promise(function (resolve, reject) {
+      try {
+        if (canvas.convertToBlob) {
+          canvas.convertToBlob({ type: 'image/jpeg', quality: 0.82 }).then(resolve, reject);
+        } else {
+          canvas.toBlob(function (blob) {
+            if (blob) resolve(blob); else reject(new Error('Thumbnail failed'));
+          }, 'image/jpeg', 0.82);
+        }
+      } catch (e) { reject(e); }
+    });
+  }
+
+  function yieldToUI() {
+    return new Promise(function (resolve) { setTimeout(resolve, 0); });
+  }
+
+  async function importFiles(fileList) {
+    const all = Array.prototype.slice.call(fileList || []);
+    if (!all.length) return;
+
+    const images = all.filter(isImageFile);
+    const rejectedCount = all.length - images.length;
+
+    if (!images.length) {
+      toast('No supported image files were selected.', 'error');
+      return;
+    }
+
+    const knownKeys = new Set();
+    state.photos.forEach(function (p) {
+      if (p.dedupeKey) knownKeys.add(p.dedupeKey);
+    });
+
+    let added = 0, duplicates = 0, failed = 0;
+    showImportProgress(images.length);
+
+    for (let i = 0; i < images.length; i++) {
+      const file = images[i];
+      updateImportProgress(i, images.length, file.name);
+      await yieldToUI();
+
+      const key = file.name + '|' + file.size + '|' + (file.lastModified || 0);
+      if (knownKeys.has(key)) { duplicates++; continue; }
+
+      let decoded = null;
+      try {
+        decoded = await decodeImageFile(file);
+        const thumbBlob = await makeThumbnail(decoded.source, decoded.width, decoded.height);
+
+        const id = newId();
+        const meta = {
+          id: id,
+          name: file.name || 'photo',
+          type: file.type || 'image/*',
+          size: file.size || 0,
+          lastModified: file.lastModified || null,
+          importedAt: Date.now(),
+          favorite: false,
+          width: decoded.width,
+          height: decoded.height,
+          dedupeKey: key
+        };
+
+        const metaSaved = await storePut('photos', meta);
+        const blobSaved = await storePut('blobs', { id: id, blob: file, thumb: thumbBlob });
+
+        if (!metaSaved && !blobSaved) {
+          // both went to memory only — still viewable this session
+        }
+
+        state.photos.push(meta);
+        knownKeys.add(key);
+        added++;
+      } catch (err) {
+        failed++;
+      } finally {
+        if (decoded && decoded.cleanup) decoded.cleanup();
+      }
+    }
+
+    updateImportProgress(images.length, images.length, '');
+    hideImportProgress();
+
+    if (!storageOK) {
+      toast('Imported for this session only — storage is unavailable.', 'warn');
+    } else if (added > 0) {
+      toast(added + ' photo' + (added === 1 ? '' : 's') + ' imported');
+    }
+
+    const notes = [];
+    if (duplicates) notes.push(duplicates + ' duplicate' + (duplicates === 1 ? '' : 's') + ' skipped');
+    if (failed) notes.push(failed + ' file' + (failed === 1 ? '' : 's') + ' could not be read');
+    if (rejectedCount) notes.push(rejectedCount + ' non-image file' + (rejectedCount === 1 ? '' : 's') + ' ignored');
+    if (notes.length && (added > 0 || failed > 0)) {
+      setTimeout(function () { toast(notes.join(' · '), failed ? 'warn' : 'info'); }, 1800);
+    }
+
+    if (added === 0 && failed > 0 && duplicates === 0) {
+      toast('Those files could not be decoded by this browser.', 'error');
+    }
+
+    clearThumbUrls();
+    refresh();
+  }
+
+  /* =========================================================
+     REFRESH / RENDER
+     ========================================================= */
+  function refresh() {
+    clearThumbUrls();
+    renderView();
+    updateStats();
+    updateSelBar();
+  }
+
+  function renderView() {
+    switch (state.view) {
+      case 'photos': renderPhotos(); break;
+      case 'albums': renderAlbums(); break;
+      case 'album': renderAlbumDetail(); break;
+      case 'favorites': renderFavorites(); break;
+      case 'settings': renderSettings(); break;
+    }
+  }
+
+  function updateStats() {
+    const favCount = state.photos.filter(function (p) { return p.favorite; }).length;
+    const sp = $('#statPhotos'), sa = $('#statAlbums'), sf = $('#statFavs');
+    if (sp) sp.textContent = String(state.photos.length);
+    if (sa) sa.textContent = String(state.albums.length);
+    if (sf) sf.textContent = String(favCount);
+  }
+
+  function buildThumb(photo) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'thumb';
+    btn.setAttribute('data-id', photo.id);
+    btn.setAttribute('aria-label', photo.name + (photo.favorite ? ' — favorite' : ''));
+    if (state.selectMode && state.selection.has(photo.id)) btn.classList.add('selected');
+
+    const img = document.createElement('img');
+    img.alt = '';
+    img.decoding = 'async';
+    img.setAttribute('data-id', photo.id);
+    btn.appendChild(img);
+
+    if (photo.favorite) {
+      const badge = document.createElement('span');
+      badge.className = 'fav-badge';
+      badge.appendChild(iconEl('heartFill'));
+      btn.appendChild(badge);
+    }
+
+    if (state.selectMode) {
+      const check = document.createElement('span');
+      check.className = 'check';
+      check.appendChild(iconEl('check'));
+      btn.appendChild(check);
+    }
+
+    btn.addEventListener('click', function () { onThumbActivate(photo.id); });
+    observeThumb(img);
+    return btn;
+  }
+
+  function renderGrid(container, photos) {
+    container.textContent = '';
+    if (!photos.length) { container.hidden = true; return; }
+    container.hidden = false;
+    const frag = document.createDocumentFragment();
+    photos.forEach(function (p) { frag.appendChild(buildThumb(p)); });
+    container.appendChild(frag);
+  }
+
+  function renderPhotos() {
+    resetThumbObserver();
+    const list = getViewPhotos();
+    const grid = $('#photosGrid');
+    const empty = $('#photosEmpty');
+    const noResults = $('#photosNoResults');
+    const sub = $('#photosSub');
+
+    if (state.photos.length === 0) {
+      sub.textContent = 'No photos yet';
+      grid.textContent = '';
+      grid.hidden = true;
+      empty.hidden = false;
+      noResults.hidden = true;
+      return;
+    }
+
+    empty.hidden = true;
+
+    const total = state.photos.length;
+    const shown = list.length;
+    sub.textContent = state.search.trim()
+      ? shown + ' of ' + total + ' photo' + (total === 1 ? '' : 's')
+      : total + ' photo' + (total === 1 ? '' : 's');
+
+    if (shown === 0) {
+      grid.textContent = '';
+      grid.hidden = true;
+      noResults.hidden = false;
+      return;
+    }
+
+    noResults.hidden = true;
+    renderGrid(grid, list);
+  }
+
+  function buildAlbumCard(album) {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'album-card';
+    card.setAttribute('data-id', album.id);
+    card.setAttribute('aria-label', album.name + ', ' + album.photoIds.length + ' photo' + (album.photoIds.length === 1 ? '' : 's'));
+
+    const cover = document.createElement('div');
+    cover.className = 'album-cover';
+
+    let coverPhoto = null;
+    for (let i = 0; i < album.photoIds.length; i++) {
+      const p = getPhoto(album.photoIds[i]);
+      if (p) { coverPhoto = p; break; }
+    }
+
+    if (coverPhoto) {
+      const img = document.createElement('img');
+      img.alt = '';
+      img.decoding = 'async';
+      img.setAttribute('data-id', coverPhoto.id);
+      cover.appendChild(img);
+      observeThumb(img);
+    } else {
+      const ph = document.createElement('div');
+      ph.className = 'placeholder';
+      ph.appendChild(iconEl('image'));
+      cover.appendChild(ph);
+    }
+
+    const meta = document.createElement('div');
+    meta.className = 'album-meta';
+    const name = document.createElement('div');
+    name.className = 'album-name';
+    name.textContent = album.name;
+    const count = document.createElement('div');
+    count.className = 'album-count';
+    count.textContent = album.photoIds.length + ' photo' + (album.photoIds.length === 1 ? '' : 's');
+    meta.appendChild(name);
+    meta.appendChild(count);
+
+    card.appendChild(cover);
+    card.appendChild(meta);
+    card.addEventListener('click', function () { navigate('album', album.id); });
+    return card;
+  }
+
+  function renderAlbums() {
+    resetThumbObserver();
+    const grid = $('#albumsGrid');
+    const empty = $('#albumsEmpty');
+    const sub = $('#albumsSub');
+
+    grid.textContent = '';
+
+    if (state.albums.length === 0) {
+      grid.hidden = true;
+      empty.hidden = false;
+      sub.textContent = 'Albums in this app only — not folders on your device';
+      return;
+    }
+
+    empty.hidden = true;
+    grid.hidden = false;
+    sub.textContent = state.albums.length + ' album' + (state.albums.length === 1 ? '' : 's') + ' · in this app only';
+
+    const frag = document.createDocumentFragment();
+    state.albums.forEach(function (a) { frag.appendChild(buildAlbumCard(a)); });
+    grid.appendChild(frag);
+  }
+
+  function renderAlbumDetail() {
+    resetThumbObserver();
+    const album = getAlbum(state.albumId);
+    const title = $('#albumTitle');
+    const sub = $('#albumSub');
+    const grid = $('#albumGrid');
+    const empty = $('#albumEmpty');
+
+    if (!album) {
+      title.textContent = 'Album';
+      sub.textContent = 'Album not found';
+      grid.textContent = '';
+      grid.hidden = true;
+      empty.hidden = true;
+      return;
+    }
+
+    title.textContent = album.name;
+    const set = new Set(album.photoIds);
+    const list = sortList(state.photos.filter(function (p) { return set.has(p.id); }));
+    sub.textContent = list.length + ' photo' + (list.length === 1 ? '' : 's') + ' in this album';
+
+    if (list.length === 0) {
+      grid.textContent = '';
+      grid.hidden = true;
+      empty.hidden = false;
+      return;
+    }
+
+    empty.hidden = true;
+    renderGrid(grid, list);
+  }
+
+  function renderFavorites() {
+    resetThumbObserver();
+    const list = getViewPhotos();
+    const grid = $('#favGrid');
+    const empty = $('#favEmpty');
+    const sub = $('#favSub');
+
+    if (list.length === 0) {
+      grid.textContent = '';
+      grid.hidden = true;
+      empty.hidden = false;
+      sub.textContent = 'No favorites yet';
+      return;
+    }
+
+    empty.hidden = true;
+    sub.textContent = list.length + ' favorite' + (list.length === 1 ? '' : 's');
+    renderGrid(grid, list);
+  }
+
+  function renderSettings() {
+    const seg = $('#themeSeg');
+    if (seg) {
+      $$('button', seg).forEach(function (b) {
+        const active = b.getAttribute('data-theme') === state.theme;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+    }
+    const trs = $('#thumbRangeSettings');
+    if (trs) trs.value = String(state.thumbSize);
+    const lbl = $('#thumbSizeLabel');
+    if (lbl) lbl.textContent = state.thumbSize + ' px';
+    const iv = $('#intervalSelect');
+    if (iv) iv.value = String(state.slideInterval);
+    updateStats();
+  }
+
+  /* =========================================================
+     NAVIGATION
+     ========================================================= */
+  function navigate(view, albumId) {
+    if (view === 'album') {
+      if (!getAlbum(albumId)) { view = 'albums'; }
+      else state.albumId = albumId;
+    }
+    state.view = view;
+    if (state.selectMode) {
+      state.selectMode = false;
+      state.selection.clear();
+    }
+    $$('.view').forEach(function (v) {
+      v.classList.toggle('active', v.getAttribute('data-view') === view);
+    });
+    $$('[data-nav]').forEach(function (b) {
+      const target = b.getAttribute('data-nav');
+      const active = target === view || (view === 'album' && target === 'albums');
+      b.classList.toggle('active', active);
+      if (active) b.setAttribute('aria-current', 'page');
+      else b.removeAttribute('aria-current');
+    });
+    clearThumbUrls();
+    renderView();
+    updateStats();
+    updateSelBar();
+    try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
+  }
+
+  /* =========================================================
+     SELECTION
+     ========================================================= */
+  function updateSelBar() {
+    const bar = $('#selbar');
+    bar.hidden = !state.selectMode;
+    const selBtn = $('#btnSelect');
+    if (selBtn) selBtn.textContent = state.selectMode ? 'Done' : 'Select';
+    const albumSel = $('#btnAlbumSelect');
+    if (albumSel) albumSel.textContent = state.selectMode ? 'Done' : 'Select';
+    if (!state.selectMode) return;
+
+    $('#selCount').textContent = state.selection.size + ' selected';
+    const inAlbum = state.view === 'album';
+    $('#selRemove').textContent = inAlbum ? 'Remove from album' : 'Remove from library';
+    const none = state.selection.size === 0;
+    $('#selAdd').disabled = none;
+    $('#selRemove').disabled = none;
+  }
+
+  function toggleSelectMode(force) {
+    const next = typeof force === 'boolean' ? force : !state.selectMode;
+    state.selectMode = next;
+    state.selection.clear();
+    clearThumbUrls();
+    renderView();
+    updateSelBar();
+  }
+
+  function onThumbActivate(id) {
+    if (state.selectMode) {
+      if (state.selection.has(id)) state.selection.delete(id);
+      else state.selection.add(id);
+      const btn = document.querySelector('.thumb[data-id="' + cssEscape(id) + '"]');
+      if (btn) btn.classList.toggle('selected', state.selection.has(id));
+      updateSelBar();
+      return;
+    }
+    const list = getViewPhotos();
+    const ids = list.map(function (p) { return p.id; });
+    const index = ids.indexOf(id);
+    if (index === -1) return;
+    openViewer(ids, index);
+  }
+
+  async function removeSelected() {
+    const ids = Array.from(state.selection);
+    if (!ids.length) return;
+
+    if (state.view === 'album') {
+      const album = getAlbum(state.albumId);
+      if (!album) return;
+      const ok = await confirmDialog({
+        title: 'Remove from album?',
+        message: ids.length + ' photo' + (ids.length === 1 ? '' : 's') + ' will be removed from "' + album.name + '". They stay in your library.',
+        confirmText: 'Remove'
+      });
+      if (!ok) return;
+      const set = new Set(ids);
+      album.photoIds = album.photoIds.filter(function (id) { return !set.has(id); });
+      await storePut('albums', album);
+      toast('Removed from album');
+    } else {
+      const ok = await confirmDialog({
+        title: 'Remove from library?',
+        message: ids.length + ' photo' + (ids.length === 1 ? '' : 's') + ' will be removed from this app. This does not delete the original files on your device.',
+        confirmText: 'Remove',
+        danger: true
+      });
+      if (!ok) return;
+      for (let i = 0; i < ids.length; i++) await deletePhotoCompletely(ids[i]);
+      toast(ids.length + ' photo' + (ids.length === 1 ? '' : 's') + ' removed');
+    }
+
+    state.selection.clear();
+    state.selectMode = false;
+    clearThumbUrls();
+    refresh();
+  }
+
+  async function deletePhotoCompletely(id) {
+    await storeDelete('photos', id);
+    await storeDelete('blobs', id);
+    state.photos = state.photos.filter(function (p) { return p.id !== id; });
+    const url = state.thumbUrls.get(id);
+    if (url) { try { URL.revokeObjectURL(url); } catch (e) {} state.thumbUrls.delete(id); }
+    for (let i = 0; i < state.albums.length; i++) {
+      const a = state.albums[i];
+      if (a.photoIds.indexOf(id) !== -1) {
+        a.photoIds = a.photoIds.filter(function (x) { return x !== id; });
+        await storePut('albums', a);
+      }
+    }
+  }
+
+  /* =========================================================
+     MODALS
+     ========================================================= */
+  function openModal(content, options) {
+    const opts = options || {};
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop';
+    const box = document.createElement('div');
+    box.className = 'modal';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    box.appendChild(content);
+    backdrop.appendChild(box);
+    document.body.appendChild(backdrop);
+
+    const previouslyFocused = document.activeElement;
+
+    function onKey(e) {
+      if (e.key === 'Escape') { e.stopPropagation(); close(); }
+    }
+    function close() {
+      document.removeEventListener('keydown', onKey, true);
+      backdrop.remove();
+      if (previouslyFocused && previouslyFocused.focus) {
+        try { previouslyFocused.focus(); } catch (e) { /* ignore */ }
+      }
+      if (opts.onClose) opts.onClose();
+    }
+    document.addEventListener('keydown', onKey, true);
+    backdrop.addEventListener('click', function (e) {
+      if (e.target === backdrop) close();
+    });
+
+    const focusable = box.querySelector('button, input, select, textarea');
+    if (focusable) setTimeout(function () { try { focusable.focus(); } catch (e) {} }, 30);
+
+    return { close: close, box: box };
+  }
+
+  function confirmDialog(options) {
+    const opts = options || {};
+    return new Promise(function (resolve) {
+      let settled = false;
+      const content = document.createElement('div');
+
+      const title = document.createElement('h2');
+      title.className = 'modal-title';
+      title.textContent = opts.title || 'Are you sure?';
+      content.appendChild(title);
+
+      if (opts.message) {
+        const msg = document.createElement('p');
+        msg.className = 'modal-msg';
+        msg.textContent = opts.message;
+        content.appendChild(msg);
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'modal-actions';
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.className = 'btn';
+      cancel.textContent = opts.cancelText || 'Cancel';
+      const ok = document.createElement('button');
+      ok.type = 'button';
+      ok.className = 'btn ' + (opts.danger ? 'danger-solid' : 'primary');
+      ok.textContent = opts.confirmText || 'Confirm';
+      actions.appendChild(cancel);
+      actions.appendChild(ok);
+      content.appendChild(actions);
+
+      const modal = openModal(content, {
+        onClose: function () { if (!settled) { settled = true; resolve(false); } }
+      });
+
+      cancel.addEventListener('click', function () {
+        settled = true; modal.close(); resolve(false);
+      });
+      ok.addEventListener('click', function () {
+        settled = true; modal.close(); resolve(true);
+      });
+      setTimeout(function () { try { ok.focus(); } catch (e) {} }, 40);
+    });
+  }
+
+  function promptDialog(options) {
+    const opts = options || {};
+    return new Promise(function (resolve) {
+      let settled = false;
+      const content = document.createElement('div');
+
+      const title = document.createElement('h2');
+      title.className = 'modal-title';
+      title.textContent = opts.title || 'Enter a name';
+      content.appendChild(title);
+
+      if (opts.message) {
+        const msg = document.createElement('p');
+        msg.className = 'modal-msg';
+        msg.textContent = opts.message;
+        content.appendChild(msg);
+      }
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'text-input';
+      input.maxLength = 60;
+      input.value = opts.value || '';
+      input.placeholder = opts.placeholder || '';
+      input.setAttribute('aria-label', opts.title || 'Name');
+      content.appendChild(input);
+
+      const actions = document.createElement('div');
+      actions.className = 'modal-actions';
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.className = 'btn';
+      cancel.textContent = 'Cancel';
+      const ok = document.createElement('button');
+      ok.type = 'button';
+      ok.className = 'btn primary';
+      ok.textContent = opts.confirmText || 'Save';
+      actions.appendChild(cancel);
+      actions.appendChild(ok);
+      content.appendChild(actions);
+
+      const modal = openModal(content, {
+        onClose: function () { if (!settled) { settled = true; resolve(null); } }
+      });
+
+      function submit() {
+        const value = input.value.trim();
+        if (!value) { input.focus(); return; }
+        settled = true; modal.close(); resolve(value);
+      }
+
+      cancel.addEventListener('click', function () {
+        settled = true; modal.close(); resolve(null);
+      });
+      ok.addEventListener('click', submit);
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); submit(); }
+      });
+      setTimeout(function () { try { input.focus(); input.select(); } catch (e) {} }, 40);
+    });
+  }
+
+  function pickAlbumFor(photoIds) {
+    return new Promise(function (resolve) {
+      let settled = false;
+      const content = document.createElement('div');
+
+      const title = document.createElement('h2');
+      title.className = 'modal-title';
+      title.textContent = 'Add to album';
+      content.appendChild(title);
+
+      const list = document.createElement('div');
+      list.className = 'album-pick-list';
+
+      if (state.albums.length === 0) {
+        const p = document.createElement('p');
+        p.className = 'modal-msg';
+        p.textContent = 'No albums yet. Create one below.';
+        list.appendChild(p);
+      }
+
+      state.albums.forEach(function (album) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'album-pick';
+        const name = document.createElement('span');
+        name.className = 'album-pick-name';
+        name.textContent = album.name;
+        const count = document.createElement('span');
+        count.className = 'album-pick-count';
+        count.textContent = album.photoIds.length + ' photo' + (album.photoIds.length === 1 ? '' : 's');
+        b.appendChild(name);
+        b.appendChild(count);
+        b.addEventListener('click', async function () {
+          const set = new Set(album.photoIds);
+          photoIds.forEach(function (id) { if (!set.has(id)) album.photoIds.push(id); });
+          const saved = await storePut('albums', album);
+          if (!saved) toast('Saved for this session only', 'warn');
+          toast('Added ' + photoIds.length + ' photo' + (photoIds.length === 1 ? '' : 's') + ' to "' + album.name + '"');
+          settled = true; modal.close(); resolve(true);
+        });
+        list.appendChild(b);
+      });
+
+      content.appendChild(list);
+
+      const inline = document.createElement('div');
+      inline.className = 'modal-inline';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'text-input';
+      input.maxLength = 60;
+      input.placeholder = 'New album name';
+      input.setAttribute('aria-label', 'New album name');
+      const createBtn = document.createElement('button');
+      createBtn.type = 'button';
+      createBtn.className = 'btn primary';
+      createBtn.textContent = 'Create & add';
+      inline.appendChild(input);
+      inline.appendChild(createBtn);
+      content.appendChild(inline);
+
+      const actions = document.createElement('div');
+      actions.className = 'modal-actions';
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.className = 'btn';
+      cancel.textContent = 'Cancel';
+      actions.appendChild(cancel);
+      content.appendChild(actions);
+
+      const modal = openModal(content, {
+        onClose: function () { if (!settled) { settled = true; resolve(false); } }
+      });
+
+      cancel.addEventListener('click', function () {
+        settled = true; modal.close(); resolve(false);
+      });
+
+      createBtn.addEventListener('click', async function () {
+        const name = input.value.trim();
+        if (!name) { input.focus(); return; }
+        const exists = state.albums.some(function (a) {
+          return a.name.toLowerCase() === name.toLowerCase();
+        });
+        if (exists) { toast('An album with that name already exists', 'error'); return; }
+        const album = {
+          id: newId(),
+          name: name,
+          createdAt: Date.now(),
+          photoIds: photoIds.slice()
+        };
+        const saved = await storePut('albums', album);
+        state.albums.push(album);
+        if (!saved) toast('Saved for this session only', 'warn');
+        else toast('Created "' + name + '"');
+        settled = true; modal.close(); resolve(true);
+      });
+
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); createBtn.click(); }
+      });
+    });
+  }
+
+  /* =========================================================
+     ALBUM ACTIONS
+     ========================================================= */
+  async function createAlbum() {
+    const name = await promptDialog({
+      title: 'New album',
+      message: 'Albums group photos inside this app. They are not folders on your device.',
+      placeholder: 'Album name',
+      confirmText: 'Create'
+    });
+    if (!name) return;
+    const exists = state.albums.some(function (a) { return a.name.toLowerCase() === name.toLowerCase(); });
+    if (exists) { toast('An album with that name already exists', 'error'); return; }
+    const album = { id: newId(), name: name, createdAt: Date.now(), photoIds: [] };
+    const saved = await storePut('albums', album);
+    state.albums.push(album);
+    if (!saved) toast('Saved for this session only', 'warn');
+    else toast('Album created');
+    clearThumbUrls();
+    renderView();
+    updateStats();
+  }
+
+  async function renameAlbum() {
+    const album = getAlbum(state.albumId);
+    if (!album) return;
+    const name = await promptDialog({
+      title: 'Rename album',
+      value: album.name,
+      placeholder: 'Album name',
+      confirmText: 'Rename'
+    });
+    if (!name || name === album.name) return;
+    const exists = state.albums.some(function (a) {
+      return a.id !== album.id && a.name.toLowerCase() === name.toLowerCase();
+    });
+    if (exists) { toast('An album with that name already exists', 'error'); return; }
+    album.name = name;
+    const saved = await storePut('albums', album);
+    if (!saved) toast('Saved for this session only', 'warn');
+    else toast('Album renamed');
+    renderView();
+  }
+
+  async function deleteAlbum() {
+    const album = getAlbum(state.albumId);
+    if (!album) return;
+    const ok = await confirmDialog({
+      title: 'Delete album?',
+      message: '"' + album.name + '" will be deleted. Its photos stay in your library — nothing is removed from your device.',
+      confirmText: 'Delete album',
+      danger: true
+    });
+    if (!ok) return;
+    await storeDelete('albums', album.id);
+    state.albums = state.albums.filter(function (a) { return a.id !== album.id; });
+    toast('Album deleted — photos kept in library');
+    navigate('albums');
+  }
+
+  async function addPhotosToAlbum() {
+    const album = getAlbum(state.albumId);
+    if (!album) return;
+    const candidates = state.photos.filter(function (p) { return album.photoIds.indexOf(p.id) === -1; });
+    if (!candidates.length) {
+      toast(state.photos.length ? 'All library photos are already in this album' : 'Import some photos first');
+      return;
+    }
+    navigate('photos');
+    state.selectMode = true;
+    state.selection.clear();
+    clearThumbUrls();
+    renderView();
+    updateSelBar();
+    toast('Select photos, then tap "Add to album"');
+  }
+
+  /* =========================================================
+     VIEWER
+     ========================================================= */
+  const viewer = {
+    open: false,
+    ids: [],
+    index: 0,
+    url: null,
+    scale: 1,
+    x: 0,
+    y: 0,
+    pointers: new Map(),
+    pinch: null,
+    panStart: null,
+    swipeStart: null,
+    lastTap: 0,
+    focusMode: false,
+    infoVisible: false
+  };
+
+  function viewerResetZoom(animate) {
+    viewer.scale = 1;
+    viewer.x = 0;
+    viewer.y = 0;
+    applyViewerTransform(!!animate);
+  }
+
+  function applyViewerTransform(animate) {
+    const img = $('#viewerImg');
+    if (!img) return;
+    if (animate) {
+      img.classList.add('anim');
+      setTimeout(function () { img.classList.remove('anim'); }, 260);
+    } else {
+      img.classList.remove('anim');
+    }
+    img.style.transform = 'translate(' + viewer.x + 'px,' + viewer.y + 'px) scale(' + viewer.scale + ')';
+  }
+
+  async function openViewer(ids, index) {
+    if (!ids || !ids.length) return;
+    viewer.ids = ids.slice();
+    viewer.index = clamp(index, 0, ids.length - 1);
+    viewer.open = true;
+    viewer.infoVisible = false;
+    viewer.focusMode = false;
+    $('#viewerInfoPanel').hidden = true;
+    $('#viewerInfoBtn').setAttribute('aria-pressed', 'false');
+    $('#viewer').classList.remove('focus-mode');
+    $('#viewer').hidden = false;
+    document.body.classList.add('no-scroll');
+    await showViewerPhoto();
+  }
+
+  async function closeViewer() {
+    viewer.open = false;
+    viewer.pointers.clear();
+    viewer.pinch = null;
+    viewer.panStart = null;
+    viewer.swipeStart = null;
+    if (viewer.url) {
+      try { URL.revokeObjectURL(viewer.url); } catch (e) { /* ignore */ }
+      viewer.url = null;
+    }
+    const img = $('#viewerImg');
+    img.removeAttribute('src');
+    img.style.transform = '';
+    $('#viewer').hidden = true;
+    $('#viewerInfoPanel').hidden = true;
+    document.body.classList.remove('no-scroll');
+    if (document.fullscreenElement) {
+      try { await document.exitFullscreen(); } catch (e) { /* ignore */ }
+    }
+    clearThumbUrls();
+    renderView();
+  }
+
+  async function showViewerPhoto() {
+    const id = viewer.ids[viewer.index];
+    const meta = getPhoto(id);
+    const img = $('#viewerImg');
+    const msg = $('#viewerMsg');
+
+    if (!meta) {
+      // Photo no longer exists – drop it from the list
+      viewer.ids.splice(viewer.index, 1);
+      if (!viewer.ids.length) { closeViewer(); return; }
+      viewer.index = clamp(viewer.index, 0, viewer.ids.length - 1);
+      return showViewerPhoto();
+    }
+
+    if (viewer.url) {
+      try { URL.revokeObjectURL(viewer.url); } catch (e) { /* ignore */ }
+      viewer.url = null;
+    }
+    viewerResetZoom(false);
+
+    let rec = null;
+    try { rec = await storeGet('blobs', id); } catch (e) { rec = null; }
+
+    if (!rec || !rec.blob) {
+      img.removeAttribute('src');
+      msg.hidden = false;
+      msg.textContent = 'This image could not be loaded from storage.';
+    } else {
+      msg.hidden = true;
+      try {
+        viewer.url = URL.createObjectURL(rec.blob);
+        img.src = viewer.url;
+      } catch (e) {
+        msg.hidden = false;
+        msg.textContent = 'This image could not be displayed.';
+      }
+    }
+
+    img.alt = meta.name;
+    $('#viewerTitle').textContent = meta.name;
+    $('#viewerCounter').textContent = (viewer.index + 1) + ' / ' + viewer.ids.length;
+
+    const favBtn = $('#viewerFav');
+    favBtn.classList.toggle('on', !!meta.favorite);
+    favBtn.setAttribute('aria-pressed', meta.favorite ? 'true' : 'false');
+    favBtn.setAttribute('aria-label', meta.favorite ? 'Remove from favorites' : 'Add to favorites');
+    favBtn.innerHTML = '';
+    favBtn.appendChild(iconEl(meta.favorite ? 'heartFill' : 'heart'));
+
+    if (viewer.infoVisible) renderViewerInfo(meta);
+  }
+
+  function renderViewerInfo(meta) {
+    const panel = $('#viewerInfoPanel');
+    panel.textContent = '';
+    const dl = document.createElement('dl');
+    function row(label, value) {
+      const dt = document.createElement('dt');
+      dt.textContent = label;
+      const dd = document.createElement('dd');
+      dd.textContent = value;
+      dl.appendChild(dt);
+      dl.appendChild(dd);
+    }
+    row('Filename', meta.name);
+    row('Dimensions', (meta.width || '?') + ' × ' + (meta.height || '?') + ' px');
+    row('File size', formatBytes(meta.size));
+    row('File type', meta.type || 'Unknown');
+    row('File modified', formatDate(meta.lastModified));
+    row('Imported', formatDate(meta.importedAt));
+    row('Favorite', meta.favorite ? 'Yes' : 'No');
+    panel.appendChild(dl);
+    panel.hidden = false;
+  }
+
+  function viewerNext() {
+    if (!viewer.ids.length) return;
+    viewer.index = (viewer.index + 1) % viewer.ids.length;
+    showViewerPhoto();
+  }
+  function viewerPrev() {
+    if (!viewer.ids.length) return;
+    viewer.index = (viewer.index - 1 + viewer.ids.length) % viewer.ids.length;
+    showViewerPhoto();
+  }
+
+  async function toggleFavorite(photoId) {
+    const meta = getPhoto(photoId);
+    if (!meta) return;
+    meta.favorite = !meta.favorite;
+    const saved = await storePut('photos', meta);
+    if (!saved) toast('Favorite saved for this session only', 'warn');
+    clearThumbUrls();
+    renderView();
+    updateStats();
+    return meta.favorite;
+  }
+
+  function bindViewerGestures() {
+    const stage = $('#viewerStage');
+
+    stage.addEventListener('pointerdown', function (e) {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      try { stage.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+      viewer.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (viewer.pointers.size === 2) {
+        const pts = Array.from(viewer.pointers.values());
+        const a = pts[0], b = pts[1];
+        viewer.pinch = {
+          dist: Math.hypot(a.x - b.x, a.y - b.y) || 1,
+          scale: viewer.scale,
+          x: viewer.x,
+          y: viewer.y,
+          mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+        };
+        viewer.panStart = null;
+        viewer.swipeStart = null;
+      } else if (viewer.pointers.size === 1) {
+        viewer.panStart = { x: viewer.x, y: viewer.y, px: e.clientX, py: e.clientY };
+        viewer.swipeStart = { x: e.clientX, y: e.clientY, t: Date.now() };
+      }
+    });
+
+    stage.addEventListener('pointermove', function (e) {
+      if (!viewer.pointers.has(e.pointerId)) return;
+      viewer.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (viewer.pointers.size >= 2 && viewer.pinch) {
+        e.preventDefault();
+        const pts = Array.from(viewer.pointers.values());
+        const a = pts[0], b = pts[1];
+        const dist = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+        const nextScale = clamp(viewer.pinch.scale * (dist / viewer.pinch.dist), 1, 6);
+        const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        viewer.scale = nextScale;
+        viewer.x = viewer.pinch.x + (mid.x - viewer.pinch.mid.x);
+        viewer.y = viewer.pinch.y + (mid.y - viewer.pinch.mid.y);
+        applyViewerTransform(false);
+      } else if (viewer.pointers.size === 1 && viewer.panStart) {
+        if (viewer.scale > 1.02) {
+          e.preventDefault();
+          viewer.x = viewer.panStart.x + (e.clientX - viewer.panStart.px);
+          viewer.y = viewer.panStart.y + (e.clientY - viewer.panStart.py);
+          applyViewerTransform(false);
+        }
+      }
+    });
+
+    function endPointer(e) {
+      const hadSingle = viewer.pointers.size === 1;
+      viewer.pointers.delete(e.pointerId);
+      if (viewer.pointers.size < 2) viewer.pinch = null;
+
+      if (viewer.pointers.size === 0) {
+        if (hadSingle && viewer.swipeStart && viewer.scale <= 1.02) {
+          const dx = e.clientX - viewer.swipeStart.x;
+          const dy = e.clientY - viewer.swipeStart.y;
+          const dt = Date.now() - viewer.swipeStart.t;
+          if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.4 && dt < 900) {
+            if (dx < 0) viewerNext(); else viewerPrev();
+          } else if (Math.abs(dx) < 10 && Math.abs(dy) < 10 && dt < 350) {
+            handleViewerTap(e.clientX, e.clientY);
+          }
+        }
+        viewer.swipeStart = null;
+        viewer.panStart = null;
+      }
+    }
+
+    stage.addEventListener('pointerup', endPointer);
+    stage.addEventListener('pointercancel', function (e) {
+      viewer.pointers.delete(e.pointerId);
+      if (viewer.pointers.size < 2) viewer.pinch = null;
+      if (viewer.pointers.size === 0) { viewer.swipeStart = null; viewer.panStart = null; }
+    });
+
+    function handleViewerTap(cx, cy) {
+      const now = Date.now();
+      if (now - viewer.lastTap < 320) {
+        viewer.lastTap = 0;
+        if (viewer.scale > 1.05) {
+          viewerResetZoom(true);
+        } else {
+          const rect = stage.getBoundingClientRect();
+          const px = cx - (rect.left + rect.width / 2);
+          const py = cy - (rect.top + rect.height / 2);
+          const s = 2.5;
+          viewer.scale = s;
+          viewer.x = px * (1 - s);
+          viewer.y = py * (1 - s);
+          applyViewerTransform(true);
+        }
+      } else {
+        viewer.lastTap = now;
+      }
+    }
+  }
+
+  async function toggleViewerFullscreen() {
+    const target = $('#viewer');
+    try {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (target.requestFullscreen) await target.requestFullscreen();
+        else if (target.webkitRequestFullscreen) target.webkitRequestFullscreen();
+        else throw new Error('unsupported');
+        toast('Fullscreen on');
+      } else {
+        if (document.exitFullscreen) await document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
+    } catch (err) {
+      viewer.focusMode = !viewer.focusMode;
+      target.classList.toggle('focus-mode', viewer.focusMode);
+      toast(viewer.focusMode ? 'Focus mode on — tap the button again to exit' : 'Focus mode off');
+    }
+  }
+
+  /* =========================================================
+     SLIDESHOW
+     ========================================================= */
+  const ss = {
+    open: false,
+    ids: [],
+    index: 0,
+    timer: null,
+    playing: true,
+    shuffle: false,
+    loop: true,
+    layer: 0,
+    urls: [null, null],
+    interval: 3,
+    busy: false
+  };
+
+  function ssLayers() {
+    return [$('#ssLayer0'), $('#ssLayer1')];
+  }
+
+  async function startSlideshow(ids, startIndex) {
+    const list = (ids || []).slice();
+    if (!list.length) { toast('Nothing to show in a slideshow'); return; }
+
+    if (viewer.open) await closeViewer();
+
+    ss.ids = list;
+    ss.index = clamp(startIndex || 0, 0, list.length - 1);
+    ss.playing = true;
+    ss.interval = state.slideInterval;
+    ss.open = true;
+    ss.busy = false;
+
+    const layers = ssLayers();
+    layers.forEach(function (l) { l.classList.remove('active'); l.removeAttribute('src'); });
+    ss.urls.forEach(function (u) { if (u) { try { URL.revokeObjectURL(u); } catch (e) {} } });
+    ss.urls = [null, null];
+    ss.layer = 0;
+
+    $('#ssInterval').value = String(ss.interval);
+    $('#ssShuffle').classList.toggle('on', ss.shuffle);
+    $('#ssShuffle').setAttribute('aria-pressed', ss.shuffle ? 'true' : 'false');
+    $('#ssLoop').classList.toggle('on', ss.loop);
+    $('#ssLoop').setAttribute('aria-pressed', ss.loop ? 'true' : 'false');
+
+    $('#slideshow').hidden = false;
+    document.body.classList.add('no-scroll');
+
+    await ssShow(ss.index, false);
+    ssUpdatePlayIcon();
+    ssSchedule();
+  }
+
+  function ssUpdatePlayIcon() {
+    const btn = $('#ssPlay');
+    btn.innerHTML = '';
+    btn.appendChild(iconEl(ss.playing ? 'pause' : 'play'));
+    btn.setAttribute('aria-label', ss.playing ? 'Pause slideshow' : 'Play slideshow');
+  }
+
+  async function ssShow(index, animate) {
+    if (ss.busy) return;
+    ss.busy = true;
+    const id = ss.ids[index];
+    const meta = getPhoto(id);
+    const layers = ssLayers();
+
+    if (!meta) {
+      // Skip missing photo
+      ss.busy = false;
+      if (ss.ids.length <= 1) { exitSlideshow(); return; }
+      ss.ids.splice(index, 1);
+      ss.index = index % ss.ids.length;
+      return ssShow(ss.index, animate);
+    }
+
+    let rec = null;
+    try { rec = await storeGet('blobs', id); } catch (e) { rec = null; }
+
+    if (!rec || !rec.blob) {
+      ss.busy = false;
+      if (ss.ids.length <= 1) { exitSlideshow(); toast('Image unavailable', 'warn'); return; }
+      ss.ids.splice(index, 1);
+      ss.index = index % ss.ids.length;
+      return ssShow(ss.index, animate);
+    }
+
+    const nextLayer = 1 - ss.layer;
+    const target = layers[nextLayer];
+    const prevUrl = ss.urls[nextLayer];
+    if (prevUrl) { try { URL.revokeObjectURL(prevUrl); } catch (e) {} ss.urls[nextLayer] = null; }
+
+    let url;
+    try { url = URL.createObjectURL(rec.blob); }
+    catch (e) { ss.busy = false; return; }
+    ss.urls[nextLayer] = url;
+
+    await new Promise(function (resolve) {
+      let done = false;
+      const finish = function () { if (done) return; done = true; resolve(); };
+      target.onload = finish;
+      target.onerror = finish;
+      setTimeout(finish, 4000);
+      target.src = url;
+    });
+
+    target.classList.add('active');
+    layers[ss.layer].classList.remove('active');
+    ss.layer = nextLayer;
+    ss.index = index;
+
+    $('#ssTitle').textContent = meta.name + '  ·  ' + (index + 1) + ' / ' + ss.ids.length;
+    ss.busy = false;
+  }
+
+  function ssSchedule() {
+    if (ss.timer) { clearTimeout(ss.timer); ss.timer = null; }
+    if (!ss.open || !ss.playing) return;
+    ss.timer = setTimeout(function () {
+      if (!ss.open) return;
+      ssAdvance();
+    }, Math.max(1, ss.interval) * 1000);
+  }
+
+  function ssAdvance() {
+    if (!ss.ids.length) return;
+    let next;
+    if (ss.shuffle && ss.ids.length > 1) {
+      do { next = Math.floor(Math.random() * ss.ids.length); } while (next === ss.index);
+    } else {
+      next = ss.index + 1;
+      if (next >= ss.ids.length) {
+        if (!ss.loop) {
+          ss.playing = false;
+          ssUpdatePlayIcon();
+          return;
+        }
+        next = 0;
+      }
+    }
+    ssShow(next, true).then(ssSchedule);
+  }
+
+  function ssStep(dir) {
+    if (!ss.ids.length) return;
+    if (dir > 0) {
+      let next = ss.index + 1;
+      if (next >= ss.ids.length) next = ss.loop ? 0 : ss.ids.length - 1;
+      ssShow(next, true).then(ssSchedule);
+    } else {
+      let prev = ss.index - 1;
+      if (prev < 0) prev = ss.loop ? ss.ids.length - 1 : 0;
+      ssShow(prev, true).then(ssSchedule);
+    }
+  }
+
+  function ssTogglePlay() {
+    ss.playing = !ss.playing;
+    ssUpdatePlayIcon();
+    ssSchedule();
+  }
+
+  function exitSlideshow() {
+    ss.open = false;
+    if (ss.timer) { clearTimeout(ss.timer); ss.timer = null; }
+    const layers = ssLayers();
+    layers.forEach(function (l) { l.classList.remove('active'); l.removeAttribute('src'); });
+    ss.urls.forEach(function (u) { if (u) { try { URL.revokeObjectURL(u); } catch (e) {} } });
+    ss.urls = [null, null];
+    $('#slideshow').hidden = true;
+    document.body.classList.remove('no-scroll');
+    clearThumbUrls();
+    renderView();
+  }
+
+  /* =========================================================
+     LIBRARY CLEAR
+     ========================================================= */
+  async function clearLibrary() {
+    const ok = await confirmDialog({
+      title: 'Clear imported library?',
+      message: 'All photos, thumbnails, albums and favorites stored by this app will be permanently removed. Original files on your device are not touched.',
+      confirmText: 'Clear library',
+      danger: true
+    });
+    if (!ok) return;
+
+    const ids = state.photos.map(function (p) { return p.id; });
+    for (let i = 0; i < ids.length; i++) {
+      await storeDelete('photos', ids[i]);
+      await storeDelete('blobs', ids[i]);
+    }
+    const albumIds = state.albums.map(function (a) { return a.id; });
+    for (let i = 0; i < albumIds.length; i++) await storeDelete('albums', albumIds[i]);
+
+    state.photos = [];
+    state.albums = [];
+    state.selection.clear();
+    state.selectMode = false;
+    clearThumbUrls();
+    toast('Library cleared');
+    navigate('photos');
+  }
+
+  /* =========================================================
+     EVENT BINDING
+     ========================================================= */
+  function bindUI() {
+    // Navigation
+    $$('[data-nav]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        navigate(btn.getAttribute('data-nav'));
+      });
+    });
+
+    // Import buttons
+    const fileInput = $('#fileInput');
+    const folderInput = $('#folderInput');
+
+    function openFilePicker() { fileInput.click(); }
+    function openFolderPicker() { folderInput.click(); }
+
+    ['#btnImport', '#photosEmptyImport', '#favEmptyImport'].forEach(function (sel) {
+      const b = $(sel);
+      if (b) b.addEventListener('click', openFilePicker);
+    });
+
+    const supportsFolder = 'webkitdirectory' in document.createElement('input');
+    if (supportsFolder) {
+      const f1 = $('#btnImportFolder'), f2 = $('#photosEmptyFolder');
+      if (f1) f1.hidden = false;
+      if (f2) f2.hidden = false;
+      [f1, f2].forEach(function (b) { if (b) b.addEventListener('click', openFolderPicker); });
+    }
+
+    fileInput.addEventListener('change', function () {
+      // Snapshot the File objects before resetting the live FileList.
+      const files = Array.from(fileInput.files || []);
+      fileInput.value = '';
+      if (files && files.length) importFiles(files);
+    });
+    folderInput.addEventListener('change', function () {
+      // Snapshot the File objects before resetting the live FileList.
+      const files = Array.from(folderInput.files || []);
+      folderInput.value = '';
+      if (files && files.length) importFiles(files);
+    });
+
+    // Search / sort / thumb size
+    const searchInput = $('#searchInput');
+    let searchTimer = null;
+    searchInput.addEventListener('input', function () {
+      if (searchTimer) clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        state.search = searchInput.value;
+        clearThumbUrls();
+        renderPhotos();
+      }, 180);
+    });
+
+    const sortSelect = $('#sortSelect');
+    sortSelect.value = state.sort;
+    sortSelect.addEventListener('change', function () {
+      state.sort = sortSelect.value;
+      saveSettings();
+      clearThumbUrls();
+      renderView();
+    });
+
+    const tr = $('#thumbRange');
+    tr.value = String(state.thumbSize);
+    tr.addEventListener('input', function () { setThumbSize(parseInt(tr.value, 10)); });
+
+    const trs = $('#thumbRangeSettings');
+    trs.addEventListener('input', function () { setThumbSize(parseInt(trs.value, 10)); });
+
+    // Selection
+    $('#btnSelect').addEventListener('click', function () { toggleSelectMode(); });
+    $('#btnAlbumSelect').addEventListener('click', function () { toggleSelectMode(); });
+    $('#selCancel').addEventListener('click', function () { toggleSelectMode(false); });
+
+    $('#selAdd').addEventListener('click', async function () {
+      const ids = Array.from(state.selection);
+      if (!ids.length) return;
+      await pickAlbumFor(ids);
+      state.selectMode = false;
+      state.selection.clear();
+      clearThumbUrls();
+      refresh();
+    });
+
+    $('#selRemove').addEventListener('click', removeSelected);
+
+    // Albums
+    $('#btnNewAlbum').addEventListener('click', createAlbum);
+    $('#albumsEmptyNew').addEventListener('click', createAlbum);
+    $('#btnAlbumBack').addEventListener('click', function () { navigate('albums'); });
+    $('#btnAlbumRename').addEventListener('click', renameAlbum);
+    $('#btnAlbumDelete').addEventListener('click', deleteAlbum);
+    $('#btnAlbumAddPhotos').addEventListener('click', addPhotosToAlbum);
+
+    // Slideshow launchers
+    $('#btnSlideshowPhotos').addEventListener('click', function () {
+      const list = getViewPhotos();
+      if (!list.length) { toast('Import photos first'); return; }
+      startSlideshow(list.map(function (p) { return p.id; }), 0);
+    });
+    $('#btnSlideshowFav').addEventListener('click', function () {
+      const list = getViewPhotos();
+      if (!list.length) { toast('No favorites to show'); return; }
+      startSlideshow(list.map(function (p) { return p.id; }), 0);
+    });
+    $('#btnAlbumSlideshow').addEventListener('click', function () {
+      const list = getViewPhotos();
+      if (!list.length) { toast('This album has no photos'); return; }
+      startSlideshow(list.map(function (p) { return p.id; }), 0);
+    });
+
+    // Settings
+    $('#themeSeg').addEventListener('click', function (e) {
+      const btn = e.target.closest('button[data-theme]');
+      if (!btn) return;
+      state.theme = btn.getAttribute('data-theme');
+      applyTheme();
+      saveSettings();
+      renderSettings();
+    });
+
+    $('#intervalSelect').addEventListener('change', function () {
+      const v = parseInt(this.value, 10);
+      if ([2, 3, 5, 10].indexOf(v) !== -1) {
+        state.slideInterval = v;
+        saveSettings();
+      }
+    });
+
+    $('#btnClearLibrary').addEventListener('click', clearLibrary);
+
+    // Viewer buttons
+    $('#viewerClose').addEventListener('click', closeViewer);
+    $('#viewerPrev').addEventListener('click', viewerPrev);
+    $('#viewerNext').addEventListener('click', viewerNext);
+
+    $('#viewerFav').addEventListener('click', async function () {
+      const id = viewer.ids[viewer.index];
+      if (!id) return;
+      const isFav = await toggleFavorite(id);
+      if (viewer.open) {
+        const favBtn = $('#viewerFav');
+        favBtn.classList.toggle('on', !!isFav);
+        favBtn.setAttribute('aria-pressed', isFav ? 'true' : 'false');
+        favBtn.setAttribute('aria-label', isFav ? 'Remove from favorites' : 'Add to favorites');
+        favBtn.innerHTML = '';
+        favBtn.appendChild(iconEl(isFav ? 'heartFill' : 'heart'));
+        const meta = getPhoto(id);
+        if (meta && viewer.infoVisible) renderViewerInfo(meta);
+      }
+    });
+
+    $('#viewerInfoBtn').addEventListener('click', function () {
+      viewer.infoVisible = !viewer.infoVisible;
+      const panel = $('#viewerInfoPanel');
+      const meta = getPhoto(viewer.ids[viewer.index]);
+      if (viewer.infoVisible && meta) renderViewerInfo(meta);
+      else panel.hidden = true;
+      $('#viewerInfoBtn').setAttribute('aria-pressed', viewer.infoVisible ? 'true' : 'false');
+    });
+
+    $('#viewerSlideshow').addEventListener('click', function () {
+      const ids = viewer.ids.slice();
+      const idx = viewer.index;
+      closeViewer().then(function () { startSlideshow(ids, idx); });
+    });
+
+    $('#viewerFullscreen').addEventListener('click', toggleViewerFullscreen);
+
+    $('#viewerDelete').addEventListener('click', async function () {
+      const id = viewer.ids[viewer.index];
+      const meta = getPhoto(id);
+      if (!meta) return;
+      const ok = await confirmDialog({
+        title: 'Remove from library?',
+        message: '"' + meta.name + '" will be removed from this app. This does not delete the original file on your device.',
+        confirmText: 'Remove',
+        danger: true
+      });
+      if (!ok) return;
+      await deletePhotoCompletely(id);
+      viewer.ids.splice(viewer.index, 1);
+      toast('Removed from library');
+      if (!viewer.ids.length) { closeViewer(); return; }
+      viewer.index = clamp(viewer.index, 0, viewer.ids.length - 1);
+      await showViewerPhoto();
+    });
+
+    bindViewerGestures();
+
+    // Slideshow controls
+    $('#ssClose').addEventListener('click', exitSlideshow);
+    $('#ssPlay').addEventListener('click', ssTogglePlay);
+    $('#ssNext').addEventListener('click', function () { ssStep(1); });
+    $('#ssPrev').addEventListener('click', function () { ssStep(-1); });
+
+    $('#ssShuffle').addEventListener('click', function () {
+      ss.shuffle = !ss.shuffle;
+      this.classList.toggle('on', ss.shuffle);
+      this.setAttribute('aria-pressed', ss.shuffle ? 'true' : 'false');
+      toast(ss.shuffle ? 'Shuffle on' : 'Shuffle off');
+    });
+
+    $('#ssLoop').addEventListener('click', function () {
+      ss.loop = !ss.loop;
+      this.classList.toggle('on', ss.loop);
+      this.setAttribute('aria-pressed', ss.loop ? 'true' : 'false');
+      toast(ss.loop ? 'Loop on' : 'Loop off');
+    });
+
+    $('#ssInterval').addEventListener('change', function () {
+      const v = parseInt(this.value, 10);
+      if ([2, 3, 5, 10].indexOf(v) !== -1) {
+        ss.interval = v;
+        state.slideInterval = v;
+        saveSettings();
+        if (ss.open && ss.playing) ssSchedule();
+      }
+    });
+
+    // Keyboard
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        if (ss.open) { e.preventDefault(); exitSlideshow(); return; }
+        if (viewer.open) { e.preventDefault(); closeViewer(); return; }
+      }
+      if (viewer.open) {
+        if (e.key === 'ArrowRight') { e.preventDefault(); viewerNext(); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); viewerPrev(); }
+        else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleViewerFullscreen(); }
+      } else if (ss.open) {
+        if (e.key === 'ArrowRight') { e.preventDefault(); ssStep(1); }
+        else if (e.key === 'ArrowLeft') { e.preventDefault(); ssStep(-1); }
+        else if (e.key === ' ') { e.preventDefault(); ssTogglePlay(); }
+      }
+    });
+
+    // Pause slideshow when the app becomes hidden
+    document.addEventListener('visibilitychange', function () {
+      if (!ss.open) return;
+      if (document.hidden) {
+        if (ss.timer) { clearTimeout(ss.timer); ss.timer = null; }
+      } else if (ss.playing) {
+        ssSchedule();
+      }
+    });
+
+    // Orientation / resize: keep grids tidy
+    let resizeTimer = null;
+    window.addEventListener('resize', function () {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        if (viewer.open && viewer.scale <= 1.02) viewerResetZoom(false);
+      }, 200);
+    });
+  }
+
+  /* =========================================================
+     INIT
+     ========================================================= */
+  async function init() {
+    loadSettings();
+    applyTheme();
+    document.documentElement.style.setProperty('--thumb', state.thumbSize + 'px');
+    initImportUI();
+
+    try {
+      db = await openDB();
+    } catch (e) {
+      db = null;
+      await degradeToMemory('This browser did not allow persistent storage to open.');
+    }
+
+    await loadData();
+
+    bindUI();
+    setThumbSize(state.thumbSize);
+    navigate('photos');
+    updateStats();
+
+    if (!storageOK) {
+      const banner = $('#photosBanner');
+      if (banner && banner.hidden) {
+        showStorageBanner('Persistent storage is unavailable in this browser. Photos you import will only be viewable for this session.');
+      }
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
